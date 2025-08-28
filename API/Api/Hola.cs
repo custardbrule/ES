@@ -13,10 +13,5 @@ namespace Api
         {
             return Task.FromResult(Unit.Value);
         }
-
-        public Task<Unit> Handle(IRequest<Unit> request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(Unit.Value);
-        }
     }
 }

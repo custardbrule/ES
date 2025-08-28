@@ -1,5 +1,4 @@
-
-using CQRS;
+using App.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace Api
@@ -16,7 +15,7 @@ namespace Api
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddCQRS(Assembly.GetCallingAssembly());
+            builder.Services.AddCQRS(ServiceLifetime.Transient, Assembly.GetCallingAssembly());
 
             var app = builder.Build();
 

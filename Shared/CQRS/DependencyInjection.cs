@@ -1,36 +1,32 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CQRS;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace CQRS
+namespace App.Extensions.DependencyInjection
 {
     public static class DependencyInjection
     {
         /// <summary>
         /// Register all CQRS components from the specified assemblies
         /// </summary>
-        public static IServiceCollection AddCQRS(this IServiceCollection services, params Assembly[] assemblies)
+        public static IServiceCollection AddCQRS(this IServiceCollection services, ServiceLifetime handlerLifeTime, params Assembly[] assemblies)
         {
             if (assemblies is null || assemblies.Length == 0) assemblies = [Assembly.GetCallingAssembly()];
 
             return services
                 .AddCQRSCore()
-                .AddHandlers(assemblies)
+                .AddHandlers(handlerLifeTime, assemblies)
                 .AddPipelines(assemblies);
         }
 
         /// <summary>
         /// Register all CQRS components from the specified types
         /// </summary>
-        public static IServiceCollection AddCQRS(this IServiceCollection services, params Type[] markerTypes)
+        public static IServiceCollection AddCQRS(this IServiceCollection services, ServiceLifetime handlerLifeTime, params Type[] markerTypes)
         {
             var assemblies = markerTypes.Select(t => t.Assembly).Distinct().ToArray();
-            return services.AddCQRS(assemblies);
+            return services.AddCQRS(handlerLifeTime, assemblies);
         }
 
         /// <summary>
@@ -47,13 +43,13 @@ namespace CQRS
         /// <summary>
         /// Register all handlers from the specified assemblies
         /// </summary>
-        public static IServiceCollection AddHandlers(this IServiceCollection services, params Assembly[] assemblies)
+        public static IServiceCollection AddHandlers(this IServiceCollection services, ServiceLifetime handlerLifeTime, params Assembly[] assemblies)
         {
             if (assemblies is null || assemblies.Length == 0) assemblies = [Assembly.GetCallingAssembly()];
 
             foreach (var assembly in assemblies)
             {
-                RegisterHandlers(services, assembly);
+                RegisterHandlers(services, handlerLifeTime, assembly);
             }
 
             return services;
@@ -190,7 +186,7 @@ namespace CQRS
 
         #region Private Helper Methods
 
-        private static void RegisterHandlers(IServiceCollection services, Assembly assembly)
+        private static void RegisterHandlers(IServiceCollection services, ServiceLifetime handlerLifeTime, Assembly assembly)
         {
             var handlerTypes = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract)
@@ -202,7 +198,7 @@ namespace CQRS
                 var interfaces = GetHandlerInterfaces(handlerType);
                 foreach (var interfaceType in interfaces)
                 {
-                    services.AddScoped(interfaceType, handlerType);
+                    services.Add(new ServiceDescriptor(interfaceType, handlerType, handlerLifeTime));
                 }
             }
         }

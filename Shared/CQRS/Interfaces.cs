@@ -22,6 +22,6 @@ public interface IPipeline<TRequest, TResponse> where TRequest : IRequest<TRespo
 
 public interface IPublisher
 {
-    Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
     Task<TResponse> Send<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest<TResponse>;
+    Task<Unit> Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest<Unit>;
 }
