@@ -19,7 +19,7 @@ namespace CQRS
 
         public async Task<TResponse> Send<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest<TResponse>
         {
-            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (request is null) throw new ArgumentNullException(nameof(request));
 
             // Get the handler for this request
             var handler = GetHandler<TRequest, TResponse>();
@@ -51,24 +51,23 @@ namespace CQRS
          * Pipeline but not run async so there will be some problem
          * I will test and update later
          */
-        private async Task ExecutePrePipelines<TRequest, TResponse>(
+        private Task ExecutePrePipelines<TRequest, TResponse>(
             IPipeline<TRequest, TResponse>[] pipelines,
             TRequest request,
             CancellationToken cancellationToken)
             where TRequest : IRequest<TResponse>
-           => await Task.WhenAll(pipelines.Select(pipeline => pipeline.Pre(request, cancellationToken)));
+           => Task.WhenAll(pipelines.Select(pipeline => pipeline.Pre(request, cancellationToken)));
 
         /** 
          * Pipeline but not run async so there will be some problem
          * I will test and update later
          */
-        private async Task ExecutePostPipelines<TRequest, TResponse>(
+        private Task ExecutePostPipelines<TRequest, TResponse>(
             IPipeline<TRequest, TResponse>[] pipelines,
             TRequest request,
             TResponse response,
             CancellationToken cancellationToken)
             where TRequest : IRequest<TResponse>
-            => await Task.WhenAll(pipelines.Reverse().Select(pipeline => pipeline.Post(request, response, cancellationToken)));
-
+            => Task.WhenAll(pipelines.Reverse().Select(pipeline => pipeline.Post(request, response, cancellationToken)));
     }
 }
