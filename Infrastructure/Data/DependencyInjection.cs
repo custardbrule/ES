@@ -23,6 +23,7 @@ namespace App.Extensions.DependencyInjection
         {
             services.AddKurrentDBClient(sp => sp.GetRequiredService<IConfiguration>().GetSection("KurrentDB").Value!);
             services.AddElasticsearchCore(configuration);
+            services.RegisterQuartz(configuration);
 
             return services;
         }
@@ -77,6 +78,7 @@ namespace App.Extensions.DependencyInjection
                 cfg.AwaitApplicationStarted = true;
             });
 
+            services.AddSingleton<IQuartzJobManager, QuartzJobManager>();
             return services;
         }
     }
