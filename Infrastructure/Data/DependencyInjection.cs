@@ -5,9 +5,12 @@ using Elastic.Transport;
 using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,22 +19,23 @@ namespace App.Extensions.DependencyInjection
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructureCore(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructureCore(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddKurrentDBClient(sp => sp.GetRequiredService<IConfiguration>().GetSection("KurrentDB").Value!);
-
-            services.AddElasticsearchClient();
-            services.AddSingleton<IElasticSearchContext, ElasticSearchContext>();
+            services.AddElasticsearchCore(configuration);
 
             return services;
         }
 
-        private static IServiceCollection AddElasticsearchClient(this IServiceCollection services)
+        internal static IServiceCollection AddElasticsearchCore(this IServiceCollection services, IConfiguration configuration)
         {
+            services
+                .AddOptions<ElasticSearchContextOptions>()
+                .Configure(options => configuration.GetSection("ElasticSearch").Bind(options));
+
             services.AddSingleton(sp =>
             {
-                var options = new ElasticSearchContextOptions();
-                sp.GetRequiredService<IConfiguration>().Bind("ElasticSearchSettings", options);
+                var options = sp.GetRequiredService<IOptions<ElasticSearchContextOptions>>().Value;
 
                 var c = new X509Certificate2(options.CertPath);
                 return new ElasticsearchClient(new ElasticsearchClientSettings(new Uri(options.Host))
@@ -41,6 +45,36 @@ namespace App.Extensions.DependencyInjection
                                                         {
                                                             return cert.GetCertHashString() == c.GetCertHashString();
                                                         }));
+            });
+
+            services.AddSingleton<IElasticSearchContext, ElasticSearchContext>();
+
+            return services;
+        }
+
+        internal static IServiceCollection RegisterQuartz(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddQuartz(cfg =>
+            {
+                cfg.UsePersistentStore(o =>
+                {
+                    o.UseSqlServer(c =>
+                    {
+                        c.ConnectionString = configuration.GetRequiredSection("Quartz:ConnectionString").Value!;
+                        c.TablePrefix = "QRTZ_";
+                    });
+                    o.UseSystemTextJsonSerializer();
+                });
+
+                cfg.UseSimpleTypeLoader();
+                cfg.UseDefaultThreadPool(5);
+                cfg.SchedulerName = "App_Scheduler";
+            });
+
+            services.AddQuartzHostedService(cfg =>
+            {
+                cfg.WaitForJobsToComplete = true;
+                cfg.AwaitApplicationStarted = true;
             });
 
             return services;
