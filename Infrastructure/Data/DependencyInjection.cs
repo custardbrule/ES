@@ -1,10 +1,12 @@
-﻿using Data;
+﻿using Confluent.Kafka;
+using Data;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Nodes;
 using Elastic.Transport;
 using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
 using System;
@@ -14,6 +16,7 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using static Confluent.Kafka.ConfigPropertyNames;
 
 namespace App.Extensions.DependencyInjection
 {
@@ -79,6 +82,26 @@ namespace App.Extensions.DependencyInjection
             });
 
             services.AddSingleton<IQuartzJobManager, QuartzJobManager>();
+            return services;
+        }
+        internal static IServiceCollection RegisterKafka(this IServiceCollection services, IConfiguration configuration)
+        {
+            services
+                .AddOptions<ElasticSearchContextOptions>()
+                .Configure(options => configuration.GetSection("KafkaSettings:ProducerSettings").Bind(options));
+
+            services.AddSingleton<KafkaProducerFactory>();
+            services.AddProducer(sp => sp.GetRequiredService<KafkaProducerFactory>().GetProducer(b => b.Build()));
+
+
+            return services;
+        }
+
+        internal static IServiceCollection AddProducer(this IServiceCollection services, Func<IServiceProvider, object> implementationFactory)
+        {
+            services.AddSingleton<KafkaProducerFactory>();
+            services.AddSingleton(typeof(IProducer<,>), implementationFactory);
+
             return services;
         }
     }

@@ -25,7 +25,7 @@ Add "KurrentDB" to appsetting ("kurrentdb://...")
 Add ElasticSearchSettings
 
 ```
-{
+"ElasticSearchSettings": {
     "CertPath":"...",
     "Host":"...",
     "UserName":"...",
@@ -35,3 +35,26 @@ Add ElasticSearchSettings
 
 Add [Quartz](https://www.quartz-scheduler.net/documentation/quartz-3.x/packages/microsoft-di-integration.html#using)
 Quartz DB [Links](https://github.com/quartznet/quartznet/tree/1644b15832f75042a8f6900af16b5cde652a553e/database/tables)
+
+Add KafkaSettings
+
+```
+"KafkaSettings": {
+  "ProducerSetting": {
+    "BootstrapServers": "localhost:9092",
+    "ClientId": "my-dotnet-app",
+    "SecurityProtocol": "SaslSsl",
+    "SaslMechanism": "Plain",
+    "SaslUsername": "username",
+    "SaslPassword": "password",
+    "EnableIdempotence": true,
+    "MessageTimeoutMs": 30000,
+    "RequestTimeoutMs": 30000,
+    "RetryBackoffMs": 100,
+    "MessageSendMaxRetries": 3,
+    "BatchSize": 16384,
+    "LingerMs": 5,
+    "CompressionType": "snappy"
+  }
+}
+```
