@@ -18,6 +18,7 @@ namespace Data
     {
         Task<IScheduler> GetScheduler(CancellationToken ct = default);
         Task<JobKey> Fire<T>(JobDataMap data, CancellationToken ct = default) where T : IAppJob;
+        Task<JobKey> Fire<T>(CancellationToken ct = default) where T : IAppJob;
         Task<JobKey> Fire<T>(Action<TriggerBuilder> configureTrigger, JobDataMap data, CancellationToken ct = default) where T : IAppJob;
         Task Trigger(JobKey key, CancellationToken ct = default);
         Task Trigger(JobKey key, JobDataMap data, CancellationToken ct = default);
@@ -65,6 +66,8 @@ namespace Data
 
             return job.Key;
         }
+
+        public Task<JobKey> Fire<T>(CancellationToken ct = default) where T : IAppJob => Fire<T>([], ct);
 
         /// <summary>
         /// Use for triggering predefine job
