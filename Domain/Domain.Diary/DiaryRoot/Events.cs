@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Domain.Diary.DiaryRoot
 {
-    public record InitDiary(string Name, string Description, string AuthorId, EDiaryVisibility Visibility);
+    public record InitDiary(Guid Id, DateTimeOffset CreatedDate, string Name, string Description, string AuthorId, EDiaryVisibility Visibility);
     public record ChangeDiaryVisibility(EDiaryVisibility Visibility);
     public record ChangeDiaryInfo(string Name, string Description);
 
-    public record InitDailyDiary(Guid DiaryId);
+    public record InitDailyDiary(Guid Id, Guid DiaryId, DateTimeOffset CreatedDate);
     public record AddSection(string Detail, bool IsPinned);
     public record RemoveSection(Guid Id);
     public record PinSection(Guid Id, bool IsPinned);
