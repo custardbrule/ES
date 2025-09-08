@@ -94,7 +94,7 @@ namespace Data
         /// Schedule customjob
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="configureTrigger"></param>
+        /// <param name="configureTrigger"> for custom schedule </param>
         /// <param name="data"></param>
         /// <param name="jobName"></param>
         /// <param name="ct"></param>
@@ -118,8 +118,6 @@ namespace Data
 
             return job.Key;
         }
-
-        public Task<JobKey> Fire<T>(Action<TriggerBuilder> configureTrigger, CancellationToken ct = default) where T : IAppJob => Fire<T>(configureTrigger, [], ct);
 
         /// <summary>
         /// for delete job and triggers

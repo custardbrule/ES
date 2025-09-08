@@ -13,6 +13,117 @@ using System.Threading.Tasks;
 
 namespace Data
 {
+
+    public class ElasticsearchOptions
+    {
+        public const string SectionName = "Elasticsearch";
+
+        // Connection settings
+        public string ConnectionString { get; set; } = "http://localhost:9200";
+        public string[] Nodes { get; set; } = Array.Empty<string>();
+        public string ApiKey { get; set; }
+
+        // Authentication
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string CertificateFingerprint { get; set; }
+        public string ClientCertificatePath { get; set; }
+
+        // Connection pool settings
+        public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(60);
+        public TimeSpan PingTimeout { get; set; } = TimeSpan.FromSeconds(2);
+        public int MaxRetries { get; set; } = 3;
+        public bool EnableDebugMode { get; set; } = false;
+        public bool DisableDirectStreaming { get; set; } = false;
+
+        // Index settings
+        public string DefaultIndex { get; set; } = "default";
+        public string IndexPrefix { get; set; }
+
+        // SSL/TLS settings  
+        public bool SkipCertificateValidation { get; set; } = false;
+
+        // Serialization settings
+        public bool PrettyJson { get; set; } = false;
+
+        // Convert to ElasticsearchClientSettings
+        public ElasticsearchClientSettings ToClientSettings()
+        {
+            ElasticsearchClientSettings settings;
+
+            // Configure connection
+            if (Nodes?.Length > 0)
+            {
+                var uris = Nodes.Select(node => new Uri(node)).ToArray();
+                settings = new ElasticsearchClientSettings(new StaticNodePool(uris));
+            }
+            else
+            {
+                settings = new ElasticsearchClientSettings(new Uri(ConnectionString));
+            }
+
+            // Authentication
+            if (!string.IsNullOrEmpty(ApiKey))
+            {
+                settings = settings.Authentication(new ApiKey(ApiKey));
+            }
+            else if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+            {
+                settings = settings.Authentication(new BasicAuthentication(Username, Password));
+            }
+
+            // Certificate fingerprint for Elastic Cloud
+            if (!string.IsNullOrEmpty(CertificateFingerprint))
+            {
+                settings = settings.CertificateFingerprint(CertificateFingerprint);
+            }
+
+            // Client certificate
+            if (!string.IsNullOrEmpty(ClientCertificatePath))
+            {
+                var certificate = new X509Certificate2(ClientCertificatePath);
+                settings = settings.ClientCertificate(certificate);
+            }
+
+            // Timeouts and retries
+            settings = settings
+                .RequestTimeout(RequestTimeout)
+                .PingTimeout(PingTimeout);
+
+            // SSL validation
+            if (SkipCertificateValidation)
+            {
+                settings = settings.ServerCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true);
+            }
+
+            // Debug mode
+            if (EnableDebugMode)
+            {
+                settings = settings.EnableDebugMode();
+            }
+
+            // Direct streaming
+            if (DisableDirectStreaming)
+            {
+                settings = settings.DisableDirectStreaming();
+            }
+
+            // Pretty JSON (for debugging)
+            if (PrettyJson)
+            {
+                settings = settings.PrettyJson();
+            }
+
+            // Default index
+            if (!string.IsNullOrEmpty(DefaultIndex))
+            {
+                settings = settings.DefaultIndex(DefaultIndex);
+            }
+
+            return settings;
+        }
+    }
+    
     public interface IElasticSearchContext
     {
         ElasticsearchClient Client { get; }
@@ -27,14 +138,6 @@ namespace Data
         Task<BulkResponse> BulkDeleteAsync<T>(string indexName, IEnumerable<string> documentIds) where T : class;
         Task<DeleteByQueryResponse> BulkDeleteByQueryAsync<T>(string indexName, Query query) where T : class;
 
-    }
-
-    public class ElasticSearchContextOptions
-    {
-        public string CertPath { get; set; }
-        public string Host { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
     }
 
     public class ElasticSearchContext : IElasticSearchContext

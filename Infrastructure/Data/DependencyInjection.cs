@@ -1,51 +1,40 @@
-﻿using Data;
+﻿using Confluent.Kafka;
+using Data;
 using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Nodes;
 using Elastic.Transport;
+using Google.Protobuf.WellKnownTypes;
 using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Quartz.Util;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace App.Extensions.DependencyInjection
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructureCore(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddEventStore(this IServiceCollection services)
         {
             services.AddKurrentDBClient(sp => sp.GetRequiredService<IConfiguration>().GetSection("KurrentDB").Value!);
-            services.AddElasticsearchCore(configuration);
-            services.RegisterQuartz(configuration);
 
             return services;
         }
 
-        internal static IServiceCollection AddElasticsearchCore(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddElasticsearchCore(this IServiceCollection services, IConfiguration configuration)
         {
             services
-                .AddOptions<ElasticSearchContextOptions>()
-                .Configure(options => configuration.GetSection("ElasticSearch").Bind(options));
+                .AddOptions<ElasticsearchOptions>()
+                .Configure(options => configuration.GetSection(ElasticsearchOptions.SectionName).Bind(options));
 
             services.AddSingleton(sp =>
             {
-                var options = sp.GetRequiredService<IOptions<ElasticSearchContextOptions>>().Value;
-
-                var c = new X509Certificate2(options.CertPath);
-                return new ElasticsearchClient(new ElasticsearchClientSettings(new Uri(options.Host))
-                                                        .ClientCertificate(c)
-                                                        .Authentication(new BasicAuthentication(options.UserName, options.Password))
-                                                        .ServerCertificateValidationCallback((sender, cert, chain, error) =>
-                                                        {
-                                                            return cert.GetCertHashString() == c.GetCertHashString();
-                                                        }));
+                var options = sp.GetRequiredService<IOptions<ElasticsearchOptions>>().Value;
+                var settings = options.ToClientSettings();
+                return new ElasticsearchClient(settings);
             });
 
             services.AddSingleton<IElasticSearchContext, ElasticSearchContext>();
@@ -53,7 +42,7 @@ namespace App.Extensions.DependencyInjection
             return services;
         }
 
-        internal static IServiceCollection RegisterQuartz(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection RegisterQuartz(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddQuartz(cfg =>
             {
@@ -79,6 +68,30 @@ namespace App.Extensions.DependencyInjection
             });
 
             services.AddSingleton<IQuartzJobManager, QuartzJobManager>();
+            return services;
+        }
+
+        public static IServiceCollection RegisterKafkaServices(this IServiceCollection services, IConfiguration configuration, Assembly assembly)
+        {
+            services
+                .AddOptions<ProducerConfig>()
+                .Configure(options => configuration.GetSection("KafkaSettings:ProducerSettings").Bind(options));
+
+            var typesWithAttributes = assembly.GetTypes()
+                .Where(type => type.GetCustomAttribute<RegisterKafkaProducerAttribute>(true) is not null &&
+                             !type.IsAbstract &&
+                             !type.IsInterface)
+                .ToList();
+
+            foreach (var type in typesWithAttributes)
+            {
+                var attribute = type.GetCustomAttribute<RegisterKafkaProducerAttribute>(true)!;
+                // Add factory
+                services.TryAdd(attribute.GetServiceDescriptor());
+                // add IProducer<,>
+                services.TryAdd(attribute.GetProducerServiceDescriptor());
+            }
+
             return services;
         }
     }
