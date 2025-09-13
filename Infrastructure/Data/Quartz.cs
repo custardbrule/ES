@@ -135,4 +135,9 @@ namespace Data
         private string GetTriggerKey<T>() where T : IAppJob => $"Trigger_{typeof(T).Name}";
         #endregion
     }
+
+    public static class JobDataMapExtension
+    {
+        public static JobDataMap AddPairs(this JobDataMap data, params KeyValuePair<string, object>[] pairs) => pairs.Aggregate(data, (acc, p) => { acc.Add(p); return acc; });
+    }
 }

@@ -9,9 +9,11 @@ namespace Domain.Diary.DiaryRoot
     public class DiaryConstants
     {
         public const string Base = nameof(DailyDiary);
-        public const string DailyDiaryIndex = "daily_diary";
-        public const string DailyDiaryStreamPrefix = $"{Base}_";
-        public static string GetStreamName(string id) => $"{DailyDiaryStreamPrefix}{id}";
-        public static string GetStreamName(Guid id) => $"{DailyDiaryStreamPrefix}{id:N}";
+        public const string DailyDiaryIndex = "es_daily_diary";
+        public static string GetId(Guid id) => $"{id:N}";
+        public static string GetStreamName(string id, string timeZoneId) => $"{Base}_{id}_{GetDateFromTimeZone(timeZoneId)}";
+        public static string GetStreamName(Guid id, string timeZoneId) => $"{Base}_{id:N}_{GetDateFromTimeZone(timeZoneId)}";
+
+        private static string GetDateFromTimeZone(string timeZoneId) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId)).ToString("ddMMyyyy");
     }
 }

@@ -1,34 +1,33 @@
 ﻿using CQRS;
 using Data;
 using Domain.Diary.DiaryRoot;
+using Infras.Services.Jobs;
 using KurrentDB.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Quartz;
 using System.Text.Json;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Infras.Services.Commands.Diary
 {
-    public record AddDiarySectionRequest(Guid DiaryId, Guid DayId, string Detail, bool IsPinned) : IRequest<long>;
+    public record AddDiarySectionRequest(Guid DiaryId, Guid DayId, string TimeZoneId, string Detail, bool IsPinned) : IRequest<long>;
 
     public class AddDiarySectionHandler : IHandler<AddDiarySectionRequest, long>
     {
-        private readonly IElasticSearchContext _elasticsearchContext;
         private readonly KurrentDBClient _kurrentDBClient;
+        private readonly IQuartzJobManager _quartzJobManager;
 
-        public AddDiarySectionHandler(IElasticSearchContext elasticsearchContext, KurrentDBClient kurrentDBClient)
+        public AddDiarySectionHandler(KurrentDBClient kurrentDBClient, IQuartzJobManager quartzJobManager)
         {
-            _elasticsearchContext = elasticsearchContext;
             _kurrentDBClient = kurrentDBClient;
+            _quartzJobManager = quartzJobManager;
         }
 
         async Task<long> IHandler<AddDiarySectionRequest, long>.Handle(AddDiarySectionRequest request, CancellationToken cancellationToken)
         {
-            var eventData = new EventData(Uuid.NewUuid(), nameof(AddSection), JsonSerializer.SerializeToUtf8Bytes(new AddSection(request.Detail,request.IsPinned)));
-            var res = await _kurrentDBClient.AppendToStreamAsync(DiaryConstants.GetStreamName(request.DayId), StreamState.StreamExists, [eventData], cancellationToken: cancellationToken);
+            var eventData = new EventData(Uuid.NewUuid(), nameof(AddSection), new AddSection(request.Detail, request.IsPinned).ObjectToBytes());
+            var streamKey = DiaryConstants.GetStreamName(request.DayId, request.TimeZoneId);
+            var res = await _kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.StreamExists, [eventData], cancellationToken: cancellationToken);
+
+            await _quartzJobManager.Trigger(new JobKey(SyncDailyDiaryJob.KEY, SyncDailyDiaryJob.GROUP), new JobDataMap().AddPairs(KeyValuePair.Create<string, object>("StreamKey", streamKey)), cancellationToken);
             return res.NextExpectedStreamState.ToInt64();
         }
     }

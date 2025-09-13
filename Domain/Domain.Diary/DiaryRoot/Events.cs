@@ -10,7 +10,7 @@ namespace Domain.Diary.DiaryRoot
     public record ChangeDiaryVisibility(EDiaryVisibility Visibility);
     public record ChangeDiaryInfo(string Name, string Description);
 
-    public record InitDailyDiary(Guid Id, Guid DiaryId, DateTimeOffset CreatedDate);
+    public record InitDailyDiary(Guid Id, Guid DiaryId, string TimeZoneId, DateTimeOffset CreatedDate);
     public record AddSection(string Detail, bool IsPinned);
     public record RemoveSection(Guid Id);
     public record PinSection(Guid Id, bool IsPinned);
