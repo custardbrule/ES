@@ -11,17 +11,14 @@ namespace Domain.Diary.DiaryRoot
 
         public static DailyDiary Init() => new DailyDiary(Guid.Empty, String.Empty, []);
 
-        public DailyDiary Apply(object e)
+        public DailyDiary Apply(object e) => e switch
         {
-            return e switch
-            {
-                InitDailyDiary init => Apply(init),
-                AddSection add => Apply(add),
-                RemoveSection remove => Apply(remove),
-                PinSection pin => Apply(pin),
-                _ => this,
-            };
-        }
+            InitDailyDiary init => Apply(init),
+            AddSection add => Apply(add),
+            RemoveSection remove => Apply(remove),
+            PinSection pin => Apply(pin),
+            _ => this,
+        };
         private DailyDiary Apply(InitDailyDiary init) => this with { Id = init.Id, DiaryId = init.DiaryId, TimeZoneId = init.TimeZoneId, CreatedDate = init.CreatedDate };
         private DailyDiary Apply(AddSection addSection) => this with { Sections = [.. Sections, DiarySection.Init(Id, addSection.Detail, addSection.IsPinned)] };
         private DailyDiary Apply(RemoveSection removeSection) => this with { Sections = [.. Sections.Where(v => v.Id != removeSection.Id)] };

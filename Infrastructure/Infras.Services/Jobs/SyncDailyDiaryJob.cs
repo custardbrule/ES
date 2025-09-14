@@ -6,6 +6,11 @@ using Quartz;
 
 namespace Infras.Services.Jobs
 {
+    public record SyncDailyDiaryData(string StreamKey)
+    {
+        public JobDataMap GetJobDataMap() => new JobDataMap { { nameof(StreamKey), StreamKey } };
+    }
+
     public class SyncDailyDiaryJob : IAppJob
     {
         public const string KEY = nameof(SyncDailyDiaryJob);
@@ -22,12 +27,12 @@ namespace Infras.Services.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            if (!context.MergedJobDataMap.TryGetString("StreamKey", out var streamKey)) return;
+            if (!context.MergedJobDataMap.TryGetString(nameof(SyncDailyDiaryData.StreamKey), out var streamKey)) return;
 
             // rebuild model
             var ct = CancellationToken.None;
             var daily = await _kurrentDBClient.ReadStreamAsync(Direction.Forwards, streamKey!, StreamPosition.Start, cancellationToken: ct).AggregateAsync(DailyDiary.Init(), (acc, e) => acc.Apply(e.OriginalEvent.Data.ToArray().GetDataFromBytes(e.OriginalEvent.EventType)!), ct);
-            var res = await _elasticsearchContext.IndexAsync(DiaryConstants.DailyDiaryIndex, DiaryConstants.GetId(daily.Id), daily);
+            var res = await _elasticsearchContext.IndexAsync(DailyDiaryConstants.ESIndex, DailyDiaryConstants.GetId(daily.Id), daily);
         }
     }
 }

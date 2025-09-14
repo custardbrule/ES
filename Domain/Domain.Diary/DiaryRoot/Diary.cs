@@ -16,8 +16,16 @@ namespace Domain.Diary.DiaryRoot
 
         public static Diary Init() => new Diary("", "", "", EDiaryVisibility.Public);
 
-        public Diary Apply(InitDiary initDiary) => this with { Id = initDiary.Id, CreatedDate = initDiary.CreatedDate, Name = initDiary.Name, Description = initDiary.Description, AuthorId = initDiary.AuthorId, Visibility = initDiary.Visibility };
-        public Diary Apply(ChangeDiaryVisibility changeDiaryVisibility) => this with { Visibility = changeDiaryVisibility.Visibility };
-        public Diary Apply(ChangeDiaryInfo changeDiaryInfo) => this with { Name = changeDiaryInfo.Name, Description = changeDiaryInfo.Description };
+        public Diary Apply(object e) => e switch
+        {
+            InitDiary init => Apply(init),
+            ChangeDiaryVisibility diaryVisibility => Apply(diaryVisibility),
+            ChangeDiaryInfo changeDiaryInfo => Apply(changeDiaryInfo),
+            _ => this,
+        };
+
+        private Diary Apply(InitDiary initDiary) => this with { Id = initDiary.Id, CreatedDate = initDiary.CreatedDate, Name = initDiary.Name, Description = initDiary.Description, AuthorId = initDiary.AuthorId, Visibility = initDiary.Visibility };
+        private Diary Apply(ChangeDiaryVisibility changeDiaryVisibility) => this with { Visibility = changeDiaryVisibility.Visibility };
+        private Diary Apply(ChangeDiaryInfo changeDiaryInfo) => this with { Name = changeDiaryInfo.Name, Description = changeDiaryInfo.Description };
     }
 }

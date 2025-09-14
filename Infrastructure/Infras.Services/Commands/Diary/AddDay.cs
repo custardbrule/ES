@@ -25,10 +25,10 @@ namespace Infras.Services.Commands.Diary
         {
             var id = Guid.NewGuid();
             var eventData = new EventData(Uuid.NewUuid(), nameof(InitDailyDiary), new InitDailyDiary(id, request.DiaryId, request.TimeZoneId, DateTimeOffset.UtcNow).ObjectToBytes());
-            var streamKey = DiaryConstants.GetStreamName(id, request.TimeZoneId);
+            var streamKey = DailyDiaryConstants.GetStreamName(id, request.TimeZoneId);
             var res = await _kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.NoStream, [eventData], cancellationToken: cancellationToken);
 
-            await _quartzJobManager.Trigger(new JobKey(SyncDailyDiaryJob.KEY, SyncDailyDiaryJob.GROUP), new JobDataMap().AddPairs(KeyValuePair.Create<string, object>("StreamKey", streamKey)), cancellationToken);
+            await _quartzJobManager.Trigger(new JobKey(SyncDailyDiaryJob.KEY, SyncDailyDiaryJob.GROUP), new SyncDailyDiaryData(streamKey).GetJobDataMap(), cancellationToken);
             return res.NextExpectedStreamState.ToInt64();
         }
     }

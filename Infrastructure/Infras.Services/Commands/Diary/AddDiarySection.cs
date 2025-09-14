@@ -24,10 +24,10 @@ namespace Infras.Services.Commands.Diary
         async Task<long> IHandler<AddDiarySectionRequest, long>.Handle(AddDiarySectionRequest request, CancellationToken cancellationToken)
         {
             var eventData = new EventData(Uuid.NewUuid(), nameof(AddSection), new AddSection(request.Detail, request.IsPinned).ObjectToBytes());
-            var streamKey = DiaryConstants.GetStreamName(request.DayId, request.TimeZoneId);
+            var streamKey = DailyDiaryConstants.GetStreamName(request.DayId, request.TimeZoneId);
             var res = await _kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.StreamExists, [eventData], cancellationToken: cancellationToken);
 
-            await _quartzJobManager.Trigger(new JobKey(SyncDailyDiaryJob.KEY, SyncDailyDiaryJob.GROUP), new JobDataMap().AddPairs(KeyValuePair.Create<string, object>("StreamKey", streamKey)), cancellationToken);
+            await _quartzJobManager.Trigger(new JobKey(SyncDailyDiaryJob.KEY, SyncDailyDiaryJob.GROUP), new SyncDailyDiaryData(streamKey).GetJobDataMap(), cancellationToken);
             return res.NextExpectedStreamState.ToInt64();
         }
     }
