@@ -47,27 +47,40 @@ namespace CQRS
         private IEnumerable<IPipeline<TRequest, TResponse>> GetPipelines<TRequest, TResponse>() where TRequest : IRequest<TResponse>
             => _serviceProvider.GetServices<IPipeline<TRequest, TResponse>>();
 
-        /** 
-         * Pipeline but not run async so there will be some problem
-         * I will test and update later
-         */
-        private Task ExecutePrePipelines<TRequest, TResponse>(
-            IPipeline<TRequest, TResponse>[] pipelines,
-            TRequest request,
-            CancellationToken cancellationToken)
-            where TRequest : IRequest<TResponse>
-           => Task.WhenAll(pipelines.Select(pipeline => pipeline.Pre(request, cancellationToken)));
+        private IPipeline<TRequest, TResponse> GetPipeline<TRequest, TResponse>() where TRequest : IRequest<TResponse>
+            => _serviceProvider.GetRequiredService<IPipeline<TRequest, TResponse>>();
 
         /** 
          * Pipeline but not run async so there will be some problem
          * I will test and update later
          */
-        private Task ExecutePostPipelines<TRequest, TResponse>(
+        private async Task ExecutePrePipelines<TRequest, TResponse>(
+            IPipeline<TRequest, TResponse>[] pipelines,
+            TRequest request,
+            CancellationToken cancellationToken)
+            where TRequest : IRequest<TResponse>
+        {
+            foreach (var pipeline in pipelines)
+            {
+                await pipeline.Pre(request, cancellationToken);
+            }
+        }
+
+        /** 
+         * Pipeline but not run async so there will be some problem
+         * I will test and update later
+         */
+        private async Task ExecutePostPipelines<TRequest, TResponse>(
             IPipeline<TRequest, TResponse>[] pipelines,
             TRequest request,
             TResponse response,
             CancellationToken cancellationToken)
             where TRequest : IRequest<TResponse>
-            => Task.WhenAll(pipelines.Reverse().Select(pipeline => pipeline.Post(request, response, cancellationToken)));
+        {
+            foreach (var pipeline in pipelines)
+            {
+                await pipeline.Post(request, response, cancellationToken);
+            }
+        }
     }
 }

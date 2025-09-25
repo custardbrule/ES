@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Infras.Services.Mappers
 {
-    public static class DailyDiaryMapper
+    public static class Mapper
     {
         /// <summary>
         /// use for mapping

@@ -11,8 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Infrastructure\Data\Data.csproj" />
-    <ProjectReference Include="..\..\Shared\CQRS\CQRS.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Infras.Services\Infras.Services.csproj" />
   </ItemGroup>
 
 </Project>

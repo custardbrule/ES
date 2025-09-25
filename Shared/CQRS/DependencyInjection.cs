@@ -16,8 +16,7 @@ namespace App.Extensions.DependencyInjection
 
             return services
                 .AddCQRSCore()
-                .AddHandlers(handlerLifeTime, assemblies)
-                .AddPipelines(assemblies);
+                .AddHandlers(handlerLifeTime, assemblies);
         }
 
         /// <summary>
@@ -56,18 +55,6 @@ namespace App.Extensions.DependencyInjection
         }
 
         /// <summary>
-        /// Register all pipelines from the specified assemblies
-        /// </summary>
-        public static IServiceCollection AddPipelines(this IServiceCollection services, params Assembly[] assemblies)
-        {
-            if (assemblies is null || assemblies.Length == 0) assemblies = [Assembly.GetCallingAssembly()];
-
-            foreach (var assembly in assemblies) RegisterPipelines(services, assembly);
-
-            return services;
-        }
-
-        /// <summary>
         /// Register a specific handler
         /// </summary>
         public static IServiceCollection AddHandler<THandler>(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Transient)
@@ -77,20 +64,6 @@ namespace App.Extensions.DependencyInjection
             var interfaces = GetHandlerInterfaces(handlerType);
 
             foreach (var interfaceType in interfaces) services.Add(new ServiceDescriptor(interfaceType, handlerType, lifetime));
-
-            return services;
-        }
-
-        /// <summary>
-        /// Register a specific pipeline
-        /// </summary>
-        public static IServiceCollection AddPipeline<TPipeline>(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Scoped)
-            where TPipeline : class
-        {
-            var pipelineType = typeof(TPipeline);
-            var interfaces = GetPipelineInterfaces(pipelineType);
-
-            foreach (var interfaceType in interfaces) services.Add(new ServiceDescriptor(interfaceType, pipelineType, lifetime));
 
             return services;
         }
@@ -185,7 +158,6 @@ namespace App.Extensions.DependencyInjection
         }
 
         #region Private Helper Methods
-
         private static void RegisterHandlers(IServiceCollection services, ServiceLifetime handlerLifeTime, Assembly assembly)
         {
             var handlerTypes = assembly.GetTypes()
@@ -203,23 +175,6 @@ namespace App.Extensions.DependencyInjection
             }
         }
 
-        private static void RegisterPipelines(IServiceCollection services, Assembly assembly)
-        {
-            var pipelineTypes = assembly.GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract)
-                .Where(t => GetPipelineInterfaces(t).Any())
-                .ToList();
-
-            foreach (var pipelineType in pipelineTypes)
-            {
-                var interfaces = GetPipelineInterfaces(pipelineType);
-                foreach (var interfaceType in interfaces)
-                {
-                    services.AddScoped(interfaceType, pipelineType);
-                }
-            }
-        }
-
         private static IEnumerable<Type> GetHandlerInterfaces(Type type)
         {
             return type.GetInterfaces()
@@ -231,18 +186,6 @@ namespace App.Extensions.DependencyInjection
                            genericTypeDefinition == typeof(IHandler<>);
                 });
         }
-
-        private static IEnumerable<Type> GetPipelineInterfaces(Type type)
-        {
-            return type.GetInterfaces()
-                .Where(i => i.IsGenericType)
-                .Where(i =>
-                {
-                    var genericTypeDefinition = i.GetGenericTypeDefinition();
-                    return genericTypeDefinition == typeof(IPipeline<,>);
-                });
-        }
-
         #endregion
     }
 }

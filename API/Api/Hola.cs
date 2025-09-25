@@ -13,6 +13,15 @@ namespace Api
         }
     }
 
+    public class Req2 : IRequest<int> { }
+    public class Req2Handler : IHandler<Req2, int>
+    {
+        public Task<int> Handle(Req2 request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(0);
+        }
+    }
+
     public class TJob : IAppJob
     {
         private readonly IPublisher _publisher;
