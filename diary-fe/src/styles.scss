@@ -1,0 +1,77 @@
+@use "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Lavishly+Yours&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap");
+
+:root {
+  /* utilities */
+  --content-container-height: calc(100vh - 24px - 60px);
+
+  /* colors */
+  --color-bg-primary: #1f1f1f;
+  --color-text-primary: #fff4f4;
+  --color-bg-yellow-primary: #e6cc9c;
+
+  --color-bg-secondary: #6f4e37;
+  --color-text-secondary: #b6dedd;
+
+  /* typography */
+  --font-weight-title: 700;
+  --font-weight-label: 600;
+  --font-weight-body: 400;
+
+  font-family: "Roboto Mono", monospace;
+}
+
+/* colors */
+@theme static {
+  --color-primary: var(--color-text-primary);
+  --color-secondary: var(--color-text-secondary);
+
+  --color-bg-primary: var(--color-bg-primary);
+  --color-bg-secondary: var(--color-bg-secondary);
+  --color-bg-yellow-primary: var(--color-bg-yellow-primary);
+}
+
+/* typography */
+@layer utilities {
+  .text-title {
+    font-weight: var(--font-weight-title);
+
+    &-sm {
+      font-size: 16px;
+    }
+    &-md {
+      font-size: 20px;
+    }
+    &-lg {
+      font-size: 24px;
+    }
+  }
+
+  .text-label {
+    font-weight: var(--font-weight-label);
+
+    &-sm {
+      font-size: 14px;
+    }
+    &-md {
+      font-size: 16px;
+    }
+    &-lg {
+      font-size: 18px;
+    }
+  }
+
+  .text-body {
+    font-weight: var(--font-weight-body);
+
+    &-sm {
+      font-size: 12px;
+    }
+    &-md {
+      font-size: 14px;
+    }
+    &-lg {
+      font-size: 16px;
+    }
+  }
+}

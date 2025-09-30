@@ -1,0 +1,10 @@
+.navbar {
+  height: 60px;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
