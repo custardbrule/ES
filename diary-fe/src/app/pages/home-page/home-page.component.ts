@@ -41,13 +41,15 @@ export class HomePageComponent implements OnInit {
     const { clientWidth, clientHeight } = element;
 
     this.scene = new THREE.Scene();
+    this.scene.background = null;
     this.camera = new THREE.PerspectiveCamera(
       25,
       clientWidth / clientHeight,
       0.1,
       100
     );
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    this.renderer.setClearColor(0x000000, 0); // Sets clear color to black with 0 opacity
     this.renderer.setSize(clientWidth, clientHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     element.appendChild(this.renderer.domElement);

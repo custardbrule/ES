@@ -18,6 +18,11 @@
   --font-weight-label: 600;
   --font-weight-body: 400;
 
+  /* layout */
+  --footer-height: 24px;
+  --navbar-height: 60px;
+  --content-height: calc(100vh - var(--footer-height) - var(--navbar-height));
+
   font-family: "Roboto Mono", monospace;
 }
 
