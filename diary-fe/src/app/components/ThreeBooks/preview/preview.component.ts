@@ -31,11 +31,15 @@ export class BookPreviewComponent implements AfterViewInit {
   private camera!: THREE.PerspectiveCamera;
   private scene!: THREE.Scene;
   private renderer!: THREE.WebGLRenderer;
+  
+  // Add these properties to store animation state
+  private mixer: THREE.AnimationMixer | null = null;
+  private clock = new THREE.Clock();
 
   constructor() {}
+  
   ngAfterViewInit(): void {
     this.initThreeJS();
-    // this.renderCube();
     this.curveBox();
   }
 
@@ -48,6 +52,18 @@ export class BookPreviewComponent implements AfterViewInit {
 
     this.scene = new THREE.Scene();
     this.scene.background = null;
+    
+    // Add lights - CRITICAL for seeing textures!
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    this.scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7);
+    this.scene.add(directionalLight);
+
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
+    this.scene.add(hemisphereLight);
+    
     this.camera = new THREE.PerspectiveCamera(
       25,
       clientWidth / clientHeight,
@@ -55,117 +71,140 @@ export class BookPreviewComponent implements AfterViewInit {
       100
     );
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    this.renderer.setClearColor(0x000000, 0); // Sets clear color to black with 0 opacity
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setSize(clientWidth, clientHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     element.appendChild(this.renderer.domElement);
   }
 
-  private renderCube(): void {
+  private async curveBox(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-    });
-    const cube = new THREE.Mesh(geometry, material);
-    this.scene.add(cube);
+    const loader = new GLTFLoader();
+    const textureLoader = new TextureLoader();
 
-    this.camera.position.z = 3;
+    try {
+      // Load all assets concurrently using built-in loadAsync
+      const [gltf, coverTexture, fabricTexture] = await Promise.all([
+        loader.loadAsync('assets/models/preview-book/book.gltf'),
+        textureLoader.loadAsync('assets/models/preview-book/bood-side.jpg'),
+        textureLoader.loadAsync('assets/models/preview-book/fabric-1.jpg')
+      ]);
+
+      console.log('All assets loaded successfully!');
+
+      const model = gltf.scene;
+
+      // Apply textures to the model
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material) {
+          console.log('Mesh name:', child.name, 'Material:', child.material.name);
+          
+          // Clone material to avoid affecting other meshes
+          const material = child.material.clone();
+          
+          // Apply textures based on material name from GLTF
+          if (material.name === 'Material.003' || child.name === 'BookMesh') {
+            material.map = coverTexture;
+            material.needsUpdate = true;
+          } else if (material.name === 'Material.004') {
+            material.map = fabricTexture;
+            material.needsUpdate = true;
+          }
+          
+          child.material = material;
+        }
+      });
+
+      // Add model to scene
+      this.scene.add(model);
+
+      // Setup animations - CRITICAL: Store mixer as instance property
+      this.mixer = new THREE.AnimationMixer(model);
+      
+      // Play all animations ONCE
+      if (gltf.animations && gltf.animations.length > 0) {
+        console.log(`Found ${gltf.animations.length} animations:`, gltf.animations.map(a => a.name));
+        
+        gltf.animations.forEach((clip) => {
+          const action = this.mixer!.clipAction(clip);
+          
+          // Configure to play only once
+          action.setLoop(THREE.LoopOnce, 1);
+          action.clampWhenFinished = true; // Stay on last frame when finished
+          
+          action.play();
+          console.log(`Playing animation once: ${clip.name}`);
+        });
+      } else {
+        console.warn('No animations found in GLTF');
+      }
+
+      // Start the animation loop after everything is loaded
+      this.startAnimation();
+
+    } catch (error) {
+      console.error('Error loading assets:', error);
+    }
+
+    this.camera.position.set(-10, 30, 45);
     const controls = new OrbitControls(this.camera, this.renderer.domElement);
+  }
 
+  private loadGLTF(loader: GLTFLoader, url: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      loader.load(
+        url,
+        (gltf) => resolve(gltf),
+        (xhr) => {
+          console.log(`GLTF: ${(xhr.loaded / xhr.total * 100).toFixed(2)}% loaded`);
+        },
+        (error) => reject(error)
+      );
+    });
+  }
+
+  private loadTexture(loader: TextureLoader, url: string): Promise<THREE.Texture> {
+    return new Promise((resolve, reject) => {
+      loader.load(
+        url,
+        (texture) => {
+          console.log(`Texture loaded: ${url}`);
+          resolve(texture);
+        },
+        undefined,
+        (error) => {
+          console.error(`Error loading texture: ${url}`, error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  private startAnimation(): void {
     const animate = () => {
+      // CRITICAL: Update the mixer with delta time
+      if (this.mixer) {
+        const delta = this.clock.getDelta();
+        this.mixer.update(delta);
+      }
+
       this.renderer.render(this.scene, this.camera);
     };
 
-    // Run animation outside Angular zone so it doesn't affect stability
+    // Run animation outside Angular zone
     this.ngZone.runOutsideAngular(() =>
       this.renderer.setAnimationLoop(animate)
     );
   }
 
-  private curveBox(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    // const geometry = new THREE.PlaneGeometry(1, 2, 10, 10);
-    // const position = geometry.getAttribute('position');
-    // for (let i = 0; i < position.count; i++) {
-    //   const x = position.getX(i);
-    //   const y = position.getY(i);
-
-    //   // Curve to one side like a cylinder
-    //   // x ranges from -0.5 to 0.5 (normalized plane coordinates)
-    //   const normalizedX = x + 0.5; // Now ranges from 0 to 1
-    //   const angle = normalizedX * Math.PI * 0.5; // 0 to 90 degrees (quarter cylinder)
-
-    //   const radius = 0.5; // Cylinder radius
-    //   const newZ = radius * (1 - Math.cos(angle)); // Depth curve
-    //   const newX = radius * Math.sin(angle); // Horizontal displacement
-
-    //   position.setX(i, newX);
-    //   position.setZ(i, newZ);
-    // }
-    // position.needsUpdate = true; // Important to update the geometry
-    // geometry.computeVertexNormals(); // Recalculate normals for proper lighting
-
-    // const material = new THREE.MeshBasicMaterial({
-    //   color: 0x00ff00,
-    //   side: THREE.DoubleSide,
-    //   wireframe: true,
-    // });
-    // const mesh = new THREE.Mesh(geometry, material);
-    const loader = new GLTFLoader();
-    const textureLoader = new TextureLoader();
-
-    loader.load(
-      'assets/models/preview-book/book.gltf',
-      (gltf) => {
-        const model = gltf.scene;
-
-        // Load textures
-        const coverTexture = textureLoader.load(
-          'assets/models/preview-book/bood-side.jpg'
-        );
-        const fabricTexture = textureLoader.load(
-          'assets/models/preview-book/fabric-1.jpg'
-        );
-
-        // Apply textures to specific parts
-        model.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            // Apply to all meshes
-            child.material.map = coverTexture;
-            child.material.needsUpdate = true;
-
-            // Or apply based on name
-            if (child.name === 'BookMesh') {
-              child.material.map = coverTexture;
-            } else if (child.name === 'BookSpine') {
-              child.material.map = fabricTexture;
-            }
-          }
-        });
-
-        this.scene.add(model);
-      },
-      function (xhr) {
-        console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-      },
-      function (error) {
-        console.error('An error occurred:', error);
-      }
-    );
-
-    this.camera.position.z = 50;
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
-
-    const animate = () => {
-      this.renderer.render(this.scene, this.camera);
-    };
-
-    // Run animation outside Angular zone so it doesn't affect stability
-    this.ngZone.runOutsideAngular(() =>
-      this.renderer.setAnimationLoop(animate)
-    );
+  // Optional: Clean up on destroy
+  ngOnDestroy(): void {
+    if (this.mixer) {
+      this.mixer.stopAllAction();
+    }
+    if (this.renderer) {
+      this.renderer.dispose();
+    }
   }
 }
