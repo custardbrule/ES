@@ -23,7 +23,6 @@ namespace CQRS
 
             // Get the handler for this request
             var handler = GetHandler<TRequest, TResponse>();
-
             // Get all pipeline behaviors for this request/response type
             var pipelines = GetPipelines<TRequest, TResponse>().ToArray();
 

@@ -9,9 +9,11 @@
   --color-bg-primary: #1f1f1f;
   --color-text-primary: #fff4f4;
   --color-bg-yellow-primary: #e6cc9c;
+  --color-border-primary: #fff4f4;
 
   --color-bg-secondary: #6f4e37;
   --color-text-secondary: #b6dedd;
+  --color-border-secondary: #b6dedd;
 
   /* typography */
   --font-weight-title: 700;
@@ -34,6 +36,30 @@
   --color-bg-primary: var(--color-bg-primary);
   --color-bg-secondary: var(--color-bg-secondary);
   --color-bg-yellow-primary: var(--color-bg-yellow-primary);
+
+  --color-border-primary: var(--color-border-primary);
+  --color-border-secondary: var(--color-border-secondary);
+}
+
+/* scroll bar */
+::-webkit-scrollbar {
+  width: 24px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-yellow-primary);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-bg-yellow-primary) transparent;
 }
 
 /* typography */

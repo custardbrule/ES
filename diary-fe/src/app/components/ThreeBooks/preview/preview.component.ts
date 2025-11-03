@@ -58,14 +58,14 @@ export class BookPreviewComponent implements AfterViewInit {
     this.scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 7);
+    directionalLight.position.set(5, 15, 5);
     this.scene.add(directionalLight);
 
     const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
     this.scene.add(hemisphereLight);
     
     this.camera = new THREE.PerspectiveCamera(
-      25,
+      15,
       clientWidth / clientHeight,
       0.1,
       100
