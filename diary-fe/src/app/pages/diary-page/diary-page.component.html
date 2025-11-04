@@ -1,1 +1,13 @@
-<p>diary-page works!</p>
+<div class="px-8 py-4">
+  <div class="relative">
+    <canvas #canvas class="h-full w-full absolute"></canvas>
+    @for(item of [1,2,3,4,5]; track item){
+    <div>
+        <div class="h-[200px] w-[200px]">
+      <canvas #child class="h-full w-full"></canvas>
+    </div>
+    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maiores quisquam error eligendi sed recusandae, voluptate, quo non nesciunt, amet voluptas nihil delectus in! Corrupti necessitatibus, autem quis id deserunt voluptatibus?</p>
+    </div>
+    }
+  </div>
+</div>

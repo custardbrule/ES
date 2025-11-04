@@ -48,7 +48,6 @@ export class BookPreviewComponent implements AfterViewInit {
 
     const element = this.container()!.nativeElement;
     const { clientWidth, clientHeight } = element;
-    console.log(clientWidth, clientHeight);
 
     this.scene = new THREE.Scene();
     this.scene.background = null;
