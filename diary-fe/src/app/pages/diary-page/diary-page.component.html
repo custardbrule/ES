@@ -1,12 +1,17 @@
-<div class="px-8 py-4">
-  <div class="relative">
-    <canvas #canvas class="h-full w-full absolute"></canvas>
+<div
+  class="relative max-h-[var(--content-container-height)] overflow-auto px-8 py-4"
+>
+  <canvas #canvas class="h-full w-[200px] fixed"></canvas>
+  <div class="flex flex-col rounded-sm shadow-md border border-primary">
     @for(item of [1,2,3,4,5]; track item){
-    <div>
-        <div class="h-[200px] w-[200px]">
-      <canvas #child class="h-full w-full"></canvas>
-    </div>
-    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maiores quisquam error eligendi sed recusandae, voluptate, quo non nesciunt, amet voluptas nihil delectus in! Corrupti necessitatibus, autem quis id deserunt voluptatibus?</p>
+    <div class="flex gap-4 items-center">
+      <canvas #child class="h-[200px] w-[200px] min-w-[200px]"></canvas>
+      <p>
+        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maiores
+        quisquam error eligendi sed recusandae, voluptate, quo non nesciunt,
+        amet voluptas nihil delectus in! Corrupti necessitatibus, autem quis id
+        deserunt voluptatibus?
+      </p>
     </div>
     }
   </div>
