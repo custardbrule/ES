@@ -22,7 +22,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 })
 export class DiaryPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChildren('child') children!: ElementRef<HTMLCanvasElement>[];
+  @ViewChildren('child') children!: ElementRef<HTMLDivElement>[];
   private loaderService = inject(LoadModelServiceService);
   private ngZone = inject(NgZone);
   private platformId = inject(PLATFORM_ID);
@@ -92,7 +92,7 @@ export class DiaryPageComponent implements AfterViewInit, OnDestroy {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   }
 
-  initScene(canvas: HTMLCanvasElement) {
+  initScene(canvas: HTMLElement) {
     const { clientWidth, clientHeight } = canvas;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
