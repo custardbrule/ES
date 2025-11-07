@@ -84,6 +84,7 @@ export class DiaryPageComponent implements AfterViewInit, OnDestroy {
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
+      powerPreference: 'high-performance',
       canvas: canvas,
     });
     this.renderer.setClearColor(0x000000, 0);
@@ -175,6 +176,7 @@ export class DiaryPageComponent implements AfterViewInit, OnDestroy {
       const isLoaded = scene.userData['isLoaded'];
       const animationStarted = scene.userData['animationStarted'];
       const actions = scene.userData['actions'];
+      const controls: OrbitControls = scene.userData['controls'];
 
       if (mixer && clock && isLoaded) {
         // Start animation on first visible frame
@@ -188,6 +190,7 @@ export class DiaryPageComponent implements AfterViewInit, OnDestroy {
         mixer.update(delta);
       }
 
+      controls.update();
       this.renderer!.render(scene, camera);
     });
   };
