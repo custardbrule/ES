@@ -63,7 +63,7 @@ export class DiaryPageComponent implements AfterViewInit, OnDestroy {
         scene.userData['isLoaded'] = false;
         scene.userData['animationStarted'] = false;
 
-        this.loaderService.loadPreviewBook().then((res) => {
+        this.loaderService.loadPreviewBook({title: 'Title', author: 'Author'}).then((res) => {
           scene.userData['mixer'] = res!.mixer;
           scene.userData['actions'] = res!.actions;
           scene.userData['isLoaded'] = true;

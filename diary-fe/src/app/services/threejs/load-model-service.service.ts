@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { generateImage } from '@src/shared/utils/image';
 import * as THREE from 'three';
 import { TextureLoader } from 'three';
 import { GLTF, GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -21,18 +22,32 @@ export class LoadModelServiceService {
     return this._previewBookModel;
   }
 
-  async loadPreviewBook() {
+  async loadPreviewBook(data: { title: string; author: string }) {
+    const c = document.createElement('canvas');
     try {
       // Load all assets concurrently using built-in loadAsync
-      const [gltf, coverTexture, fabricTexture] = await Promise.all([
-        this.loadPreviewBookMoel(),
-        this.textureLoader.loadAsync(
-          '/assets/models/preview-book/bood-side.jpg'
-        ),
-        this.textureLoader.loadAsync(
-          '/assets/models/preview-book/fabric-1.jpg'
-        ),
-      ]);
+      const [gltf, coverTexture, fabricTexture, pageTexture] =
+        await Promise.all([
+          this.loadPreviewBookMoel(),
+          this.textureLoader.loadAsync(
+            '/assets/models/preview-book/bood-side.jpg'
+          ),
+          this.textureLoader.loadAsync(
+            '/assets/models/preview-book/fabric-1.jpg'
+          ),
+          this.textureLoader
+            .loadAsync(
+              generateImage(c, {
+                ...data,
+                fontSize: 20,
+                fontFamily: 'serif',
+                textColor: 'black',
+                text: 'holaaaaaaa',
+                bgColor: 'white',
+              })
+            )
+            .finally(() => c.remove()),
+        ]);
 
       console.log('All assets loaded successfully!');
 
@@ -52,7 +67,20 @@ export class LoadModelServiceService {
           const material = child.material.clone();
 
           // Apply textures based on material name from GLTF
-          if (material.name === 'Material.003' || child.name === 'BookMesh') {
+          if (child.isMesh && child.parent && child.parent.name === 'Page1') {
+            material.map = pageTexture;
+            material.needsUpdate = true;
+          } else if (
+            child.isMesh &&
+            child.parent &&
+            child.parent.name === 'Page2'
+          ) {
+            material.map = pageTexture;
+            material.needsUpdate = true;
+          } else if (
+            material.name === 'Material.003' ||
+            child.name === 'BookMesh'
+          ) {
             material.map = coverTexture;
             material.needsUpdate = true;
           } else if (material.name === 'Material.004') {

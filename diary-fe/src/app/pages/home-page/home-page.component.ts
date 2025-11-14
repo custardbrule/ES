@@ -72,7 +72,7 @@ export class HomePageComponent implements AfterViewInit, OnDestroy {
       this.initRenderer();
 
       // init scene for each canvas
-      this.scenes = this.children.map((child) => {
+      this.scenes = this.children.map((child, idx) => {
         const canvas = child.nativeElement;
         const scene = this.initScene(canvas);
         // Add lights - CRITICAL for seeing textures!
@@ -94,12 +94,14 @@ export class HomePageComponent implements AfterViewInit, OnDestroy {
         scene.userData['isLoaded'] = false;
         scene.userData['animationStarted'] = false;
 
-        this.loaderService.loadPreviewBook().then((res) => {
-          scene.userData['mixer'] = res!.mixer;
-          scene.userData['actions'] = res!.actions;
-          scene.userData['isLoaded'] = true;
-          scene.add(res!.model);
-        });
+        this.loaderService
+          .loadPreviewBook(this.collections[idx])
+          .then((res) => {
+            scene.userData['mixer'] = res!.mixer;
+            scene.userData['actions'] = res!.actions;
+            scene.userData['isLoaded'] = true;
+            scene.add(res!.model);
+          });
         return scene;
       });
 
@@ -150,7 +152,7 @@ export class HomePageComponent implements AfterViewInit, OnDestroy {
     const height = canvas.clientHeight;
 
     if (canvas.width !== width || canvas.height !== height) {
-      this.renderer!.setSize(width, height, false);
+      this.renderer!.setSize(width, height, true);
     }
   }
 
@@ -191,7 +193,8 @@ export class HomePageComponent implements AfterViewInit, OnDestroy {
       const width = rect.width;
       const height = rect.height;
       const left = 2 * containerRect.left - rect.left;
-      const bottom = (containerRect.top - containerRect.bottom)*-1 - rect.top + 2*height;
+      const bottom =
+        (containerRect.top - containerRect.bottom) * -1 - rect.top + 2 * height;
 
       this.renderer!.setViewport(left, bottom, width, height);
       this.renderer!.setScissor(left, bottom, width, height);
