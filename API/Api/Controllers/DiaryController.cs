@@ -24,6 +24,15 @@ namespace Api.Controllers
         public async Task<IActionResult> AddDay([FromBody] AddDayRequest request) => Ok(await _publisher.Send<AddDayRequest, long>(request));
 
         [HttpPost(Name = "Add Section")]
-        public async Task<IActionResult> AddDay([FromBody] AddDiarySectionRequest request) => Ok(await _publisher.Send<AddDiarySectionRequest, long>(request));
+        public async Task<IActionResult> AddSection([FromBody] AddDiarySectionRequest request) => Ok(await _publisher.Send<AddDiarySectionRequest, long>(request));
+
+        [HttpPatch(Name = "Change Diary Visibility")]
+        public async Task<IActionResult> ChangeDiaryVisibility([FromBody] ChangeDiaryVisibilityRequest request) => Ok(await _publisher.Send<ChangeDiaryVisibilityRequest, long>(request));
+
+        [HttpPatch(Name = "Change Diary Info")]
+        public async Task<IActionResult> ChangeDiaryInfo([FromBody] ChangeDiaryInfoRequest request) => Ok(await _publisher.Send<ChangeDiaryInfoRequest, long>(request));
+
+        [HttpPatch(Name = "Pin Section")]
+        public async Task<IActionResult> PinSection([FromBody] PinSectionRequest request) => Ok(await _publisher.Send<PinSectionRequest, long>(request));
     }
 }
