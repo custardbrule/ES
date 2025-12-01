@@ -10,10 +10,15 @@
   --color-text-primary: #fff4f4;
   --color-bg-yellow-primary: #e6cc9c;
   --color-border-primary: #fff4f4;
+  --color-icon-primary: #000000;
 
   --color-bg-secondary: #6f4e37;
   --color-text-secondary: #b6dedd;
   --color-border-secondary: #b6dedd;
+  --color-icon-secondary: #1C274C;
+
+  --color-bg-contrast-1: #FFE3DC;
+  --color-text-contrast-1: #3A2D32;
 
   /* typography */
   --font-weight-title: 700;
@@ -39,6 +44,9 @@
 
   --color-border-primary: var(--color-border-primary);
   --color-border-secondary: var(--color-border-secondary);
+
+  --color-bg-contrast-1: var(--color-bg-contrast-1);
+  --color-contrast-1: var(--color-text-contrast-1);
 }
 
 /* scroll bar */

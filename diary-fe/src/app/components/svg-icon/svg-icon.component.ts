@@ -10,7 +10,11 @@ import { DomSanitizer } from '@angular/platform-browser';
 })
 export class SvgIconComponent implements OnChanges {
   @Input() public name?: string;
+  @Input() public hoverName?: string;
+
   public svgIcon: any;
+  public hoverSvgIcon: any;
+  public currentIcon: any;
 
   constructor(
     private httpClient: HttpClient,
@@ -20,12 +24,33 @@ export class SvgIconComponent implements OnChanges {
   public ngOnChanges(): void {
     if (!this.name) {
       this.svgIcon = '';
+      this.currentIcon = '';
       return;
     }
+
     this.httpClient
       .get(`assets/images/svgs/${this.name}.svg`, { responseType: 'text' })
       .subscribe((value) => {
         this.svgIcon = this.sanitizer.bypassSecurityTrustHtml(value);
+        this.currentIcon = this.svgIcon;
       });
+
+    if (this.hoverName) {
+      this.httpClient
+        .get(`assets/images/svgs/${this.hoverName}.svg`, { responseType: 'text' })
+        .subscribe((value) => {
+          this.hoverSvgIcon = this.sanitizer.bypassSecurityTrustHtml(value);
+        });
+    }
+  }
+
+  public onMouseEnter(): void {
+    if (this.hoverSvgIcon) {
+      this.currentIcon = this.hoverSvgIcon;
+    }
+  }
+
+  public onMouseLeave(): void {
+    this.currentIcon = this.svgIcon;
   }
 }

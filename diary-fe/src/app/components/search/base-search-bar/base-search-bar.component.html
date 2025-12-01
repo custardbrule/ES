@@ -1,0 +1,13 @@
+<div class="px-4 relative h-full w-full flex items-center">
+  <div class="absolute top-0 left-0 translate-y-[75%] translate-x-[100%] pointer-events-none">
+    <app-svg-icon name="search-24"></app-svg-icon>
+  </div>
+  <input
+    class="w-full bg-bg-contrast-1 text-contrast-1 text-body-md font-medium rounded-md pl-10 pr-4 py-2 outline-none focus:ring-2 focus:ring-bg-primary"
+    type="text"
+    [placeholder]="placeholder"
+    [(ngModel)]="value"
+    (ngModelChange)="onInputChange($event)"
+    (keypress)="onKeyPress($event)"
+  />
+</div>

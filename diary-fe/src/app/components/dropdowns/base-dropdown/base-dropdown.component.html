@@ -1,0 +1,13 @@
+<div class="relative flex items-center">
+  <div class="cursor-pointer" (click)="toggle()">
+    <ng-content select="[trigger]"></ng-content>
+  </div>
+
+  @if(isOpen) {
+  <div
+    class="absolute right-0 top-full mt-2 bg-bg-primary shadow-lg rounded-md border border-border-secondary z-50"
+  >
+    <ng-content select="[content]"></ng-content>
+  </div>
+  }
+</div>

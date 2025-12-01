@@ -1,10 +1,77 @@
-<div class="layout-container min-h-screen relative pb-(--footer-height) bg-bg-primary">
+<div
+  class="layout-container min-h-screen relative pb-(--footer-height) bg-bg-primary"
+>
   <!-- navbar -->
   <div
-    class="navbar text-secondary bg-bg-secondary flex gap-4 align-center justify-between px-12"
+    class="navbar text-secondary bg-bg-secondary flex gap-4 align-center justify-between px-8 md:px-12"
   >
-    <div class="h-full">Logo</div>
-    <div>Functions</div>
+    <!-- logo -->
+    <img
+      class="h-full"
+      src="/assets/images/logo.png"
+      alt="Diary archived"
+      srcset=""
+      title="Diary Archived"
+    />
+    <!-- search -->
+    <app-base-search-bar></app-base-search-bar>
+    <!-- actions -->
+    <div class="h-full flex gap-4 items-center">
+      <div class="relative flex flex-col items-center group cursor-pointer">
+        <app-svg-icon name="pen-32" hoverName="pen-fill-32"></app-svg-icon>
+        <p
+          class="text-xs absolute z-2 opacity-0 group-hover:opacity-100 duration-300 bottom-0 translate-y-full bg-bg-primary px-2 py-1 rounded shadow-md"
+        >
+          Write something
+        </p>
+      </div>
+      <!-- profile -->
+      <app-base-dropdown>
+        <app-svg-icon
+          trigger
+          name="user-question-32"
+          hoverName="user-fill-32"
+        ></app-svg-icon>
+
+        <div content class="py-2 px-2">
+          <a
+            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+            >Profile</a
+          >
+          <a
+            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+            >Settings</a
+          >
+          <a
+            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+            >Logout</a
+          >
+        </div>
+      </app-base-dropdown>
+      <!-- settings -->
+      <app-base-dropdown>
+        <app-svg-icon
+          trigger
+          name="gear-32"
+          hoverName="gear-fill-32"
+        ></app-svg-icon>
+
+        <div content class="py-2 px-2">
+          <a
+            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+            >Profile</a
+          >
+          <a
+            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+            >Settings</a
+          >
+          <a
+            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+            >Logout</a
+          >
+        </div>
+      </app-base-dropdown>
+    </div>
   </div>
   <!-- main-content -->
   <div style="min-height: var(--content-container-height)">
