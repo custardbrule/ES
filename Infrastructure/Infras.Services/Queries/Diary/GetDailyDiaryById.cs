@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace Infras.Services.Queries.Diary
 {
-    public record DailyDiaryViewModel(Guid DiaryId, DateTimeOffset CreatedDate, IReadOnlyList<DiarySection> Sections);
     public record GetDailyDiaryByIdRequest(Guid Id) : IRequest<DailyDiaryViewModel>;
 
     public class GetDailyDiaryByIdHandler : IHandler<GetDailyDiaryByIdRequest, DailyDiaryViewModel>

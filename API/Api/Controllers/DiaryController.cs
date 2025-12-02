@@ -1,6 +1,8 @@
 ﻿using CQRS;
 using Infras.Services.Commands.Diary;
+using Infras.Services.Queries.Diary;
 using Microsoft.AspNetCore.Mvc;
+using Utilities;
 
 namespace Api.Controllers
 {
@@ -16,6 +18,9 @@ namespace Api.Controllers
             _logger = logger;
             _publisher = publisher;
         }
+
+        [HttpGet(Name = "Get Diaries")]
+        public async Task<IActionResult> GetDiaries([FromQuery] GetDiariesRequest request) => Ok(await _publisher.Send<GetDiariesRequest, EPagedList<DiaryListItemViewModel>>(request));
 
         [HttpPost(Name = "Add Diary")]
         public async Task<IActionResult> AddDiary([FromBody] CreateDiaryRequest request) => Ok(await _publisher.Send<CreateDiaryRequest, long>(request));

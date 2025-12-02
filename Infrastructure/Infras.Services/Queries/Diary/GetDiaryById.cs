@@ -4,7 +4,6 @@ using Domain.Diary.DiaryRoot;
 
 namespace Infras.Services.Queries.Diary
 {
-    public record DiaryViewModel(Guid Id, string Name, string Description, string AuthorId, EDiaryVisibility Visibility, DateTimeOffset CreatedDate, DailyDiaryViewModel[] DailyDiaries);
     public record GetDiaryByIdRequest(Guid Id) : IRequest<DiaryViewModel>;
 
     public class GetDiaryByIdHandler : IHandler<GetDiaryByIdRequest, DiaryViewModel>
