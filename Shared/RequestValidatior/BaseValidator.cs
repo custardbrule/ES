@@ -31,7 +31,7 @@ namespace RequestValidatior
 
     public abstract class BaseValidator<TSource>
     {
-        private readonly Dictionary<string, (object validator, object compiledSelector)> _propValidators = [];
+        private readonly Dictionary<string, Action<TSource>> _validationActions = [];
         private readonly Dictionary<string, List<string>> _errors = [];
         public IReadOnlyDictionary<string, List<string>> Errors => _errors;
         public bool IsValid => _errors.Count == 0;
@@ -40,45 +40,36 @@ namespace RequestValidatior
         {
             var propertyName = GetPropertyName(propertyExpression);
 
-            if (_propValidators.TryGetValue(propertyName, out var existing))
-                return (PropValidator<TProp>)existing.validator;
+            if (_validationActions.ContainsKey(propertyName))
+            {
+                // Property already registered, find and return the validator
+                // We need to store validators separately for retrieval
+                throw new InvalidOperationException($"Property {propertyName} is already registered.");
+            }
 
             var validator = new PropValidator<TProp>();
             var compiledSelector = propertyExpression.Compile();
 
-            _propValidators[propertyName] = (validator, compiledSelector);
+            // Create a validation action that captures the validator and selector
+            _validationActions[propertyName] = source =>
+            {
+                validator.ClearErrors();
+                var propValue = compiledSelector(source);
+                validator.Validate(propValue);
+
+                if (!validator.IsValid)
+                    _errors[propertyName] = [.. validator.Errors];
+            };
 
             return validator;
-        }
-
-        private void ValidateProperty<TProp>(string propertyName, PropValidator<TProp> validator, object compiledSelector, TSource source)
-        {
-            validator.ClearErrors();
-
-            var compiled = (Func<TSource, TProp>)compiledSelector;
-            var propValue = compiled(source);
-
-            validator.Validate(propValue);
-
-            if (!validator.IsValid)
-                _errors[propertyName] = [.. validator.Errors];
         }
 
         public bool Validate(TSource source)
         {
             _errors.Clear();
 
-            foreach (var (propertyName, (validator, compiledSelector)) in _propValidators)
-            {
-                var validatorType = validator.GetType();
-                var propType = validatorType.GetGenericArguments()[0];
-
-                var validatePropertyMethod = GetType()
-                    .GetMethod(nameof(ValidateProperty), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                    .MakeGenericMethod(propType);
-
-                validatePropertyMethod.Invoke(this, [propertyName, validator, compiledSelector, source]);
-            }
+            foreach (var validationAction in _validationActions.Values)
+                validationAction(source);
 
             return _errors.Count == 0;
         }
