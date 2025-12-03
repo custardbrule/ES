@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace RequestValidatior
 {
-    public class PropValidator<TProp>
+    public sealed class PropValidator<TProp>
     {
         private readonly List<(Expression<Func<TProp, bool>> expression, string message)> _predicates = [];
         private readonly List<string> _errors = [];
         public IReadOnlyList<string> Errors => _errors;
-        public bool HasErrors => _errors.Count > 0;
+        public bool IsValid => _errors.Count == 0;
 
         public PropValidator<TProp> With(Expression<Func<TProp, bool>> expression, string message = "Undefined!")
         {
@@ -38,6 +33,8 @@ namespace RequestValidatior
     {
         private readonly Dictionary<string, object> _propValidators = [];
         private readonly Dictionary<string, List<string>> _errors = [];
+        public IReadOnlyDictionary<string, List<string>> Errors => _errors;
+        public bool IsValid => _errors.Count == 0;
 
         public PropValidator<TProp> RuleFor<TProp>(Expression<Func<TSource, TProp>> propertyExpression)
         {
@@ -47,6 +44,20 @@ namespace RequestValidatior
                 _propValidators[propertyName] = new PropValidator<TProp>();
 
             return (PropValidator<TProp>)_propValidators[propertyName];
+        }
+
+        private void ValidateProperty<TProp>(string propertyName, PropValidator<TProp> validator, TSource source)
+        {
+            var property = typeof(TSource).GetProperty(propertyName);
+            if (property == null) return;
+
+            validator.ClearErrors();
+
+            var propValue = (TProp)property.GetValue(source)!;
+            validator.Validate(propValue);
+
+            if (validator.IsValid)
+                _errors[propertyName] = [.. validator.Errors];
         }
 
         public bool Validate(TSource source)
@@ -59,28 +70,15 @@ namespace RequestValidatior
                 var validatorType = kvp.Value.GetType();
                 var propType = validatorType.GetGenericArguments()[0];
 
-                var property = typeof(TSource).GetProperty(propertyName);
-                if (property == null) continue;
+                var validatePropertyMethod = GetType()
+                    .GetMethod(nameof(ValidateProperty), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .MakeGenericMethod(propType);
 
-                // Clear previous errors
-                var clearMethod = validatorType.GetMethod(nameof(PropValidator<object>.ClearErrors), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                clearMethod?.Invoke(kvp.Value, null);
-
-                var propValue = property.GetValue(source);
-                var validateMethod = validatorType.GetMethod(nameof(PropValidator<object>.Validate), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                validateMethod?.Invoke(kvp.Value, [propValue]);
-
-                var errorsProperty = validatorType.GetProperty(nameof(PropValidator<object>.Errors));
-                var errors = (IReadOnlyList<string>)errorsProperty?.GetValue(kvp.Value)!;
-
-                if (errors?.Count > 0)
-                    _errors[propertyName] = [.. errors];
+                validatePropertyMethod.Invoke(this, [propertyName, kvp.Value, source]);
             }
 
             return _errors.Count == 0;
         }
-
-        public IReadOnlyDictionary<string, List<string>> GetErrors() => _errors;
 
         private static string GetPropertyName<TProp>(Expression<Func<TSource, TProp>> expression)
         {
