@@ -31,7 +31,7 @@ namespace RequestValidatior
 
     public abstract class BaseValidator<TSource>
     {
-        private readonly Dictionary<string, object> _propValidators = [];
+        private readonly Dictionary<string, (object validator, object compiledSelector)> _propValidators = [];
         private readonly Dictionary<string, List<string>> _errors = [];
         public IReadOnlyDictionary<string, List<string>> Errors => _errors;
         public bool IsValid => _errors.Count == 0;
@@ -40,23 +40,27 @@ namespace RequestValidatior
         {
             var propertyName = GetPropertyName(propertyExpression);
 
-            if (!_propValidators.ContainsKey(propertyName))
-                _propValidators[propertyName] = new PropValidator<TProp>();
+            if (_propValidators.TryGetValue(propertyName, out var existing))
+                return (PropValidator<TProp>)existing.validator;
 
-            return (PropValidator<TProp>)_propValidators[propertyName];
+            var validator = new PropValidator<TProp>();
+            var compiledSelector = propertyExpression.Compile();
+
+            _propValidators[propertyName] = (validator, compiledSelector);
+
+            return validator;
         }
 
-        private void ValidateProperty<TProp>(string propertyName, PropValidator<TProp> validator, TSource source)
+        private void ValidateProperty<TProp>(string propertyName, PropValidator<TProp> validator, object compiledSelector, TSource source)
         {
-            var property = typeof(TSource).GetProperty(propertyName);
-            if (property == null) return;
-
             validator.ClearErrors();
 
-            var propValue = (TProp)property.GetValue(source)!;
+            var compiled = (Func<TSource, TProp>)compiledSelector;
+            var propValue = compiled(source);
+
             validator.Validate(propValue);
 
-            if (validator.IsValid)
+            if (!validator.IsValid)
                 _errors[propertyName] = [.. validator.Errors];
         }
 
@@ -64,17 +68,16 @@ namespace RequestValidatior
         {
             _errors.Clear();
 
-            foreach (var kvp in _propValidators)
+            foreach (var (propertyName, (validator, compiledSelector)) in _propValidators)
             {
-                var propertyName = kvp.Key;
-                var validatorType = kvp.Value.GetType();
+                var validatorType = validator.GetType();
                 var propType = validatorType.GetGenericArguments()[0];
 
                 var validatePropertyMethod = GetType()
                     .GetMethod(nameof(ValidateProperty), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
                     .MakeGenericMethod(propType);
 
-                validatePropertyMethod.Invoke(this, [propertyName, kvp.Value, source]);
+                validatePropertyMethod.Invoke(this, [propertyName, validator, compiledSelector, source]);
             }
 
             return _errors.Count == 0;
