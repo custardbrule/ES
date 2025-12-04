@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{936C8A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{ACE813D1-A25C-4C33-9F98-462199E851B6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "API\Api\Api.csproj", "{E4BB9C59-8DBD-4C14-A173-9C2108AD1155}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diary.Api", "API\Diary.Api\Diary.Api.csproj", "{E4BB9C59-8DBD-4C14-A173-9C2108AD1155}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{4D551E3E-3D19-4187-8D10-7742FF36622F}"
 EndProject
@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Seed", "Domain\Seed\Seed.cs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain.Diary", "Domain\Domain.Diary\Domain.Diary.csproj", "{870F1688-8EB1-4B67-8F53-292A7A3EED13}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infras.Services", "Infrastructure\Infras.Services\Infras.Services.csproj", "{AA1D2067-C1C3-4F87-B090-77C3A9A51CCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infras.Diary.Services", "Infrastructure\Infras.Diary.Services\Infras.Diary.Services.csproj", "{AA1D2067-C1C3-4F87-B090-77C3A9A51CCE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestValidatior", "Shared\RequestValidatior\RequestValidatior.csproj", "{BC614C95-4FFC-4439-B9C2-557102F40CD1}"
 EndProject
