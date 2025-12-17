@@ -1,17 +1,14 @@
 ﻿using Confluent.Kafka;
 using Data;
 using Elastic.Clients.Elasticsearch;
-using Elastic.Transport;
-using Google.Protobuf.WellKnownTypes;
-using KurrentDB.Client;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
-using Quartz.Util;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 
 namespace App.Extensions.DependencyInjection
 {
@@ -93,6 +90,19 @@ namespace App.Extensions.DependencyInjection
             }
 
             return services;
+        }
+
+        public static IServiceCollection RegisterDbContextPool<T>(this IServiceCollection serviceCollection, string connectionString, int poolSize = 128, bool enableSensitiveDataLogging = false) where T : DbContext
+        {
+            serviceCollection.AddPooledDbContextFactory<T>(options =>
+            {
+                options.UseSqlServer(connectionString)
+                    .LogTo(Console.WriteLine, LogLevel.Information)
+                    .EnableSensitiveDataLogging(enableSensitiveDataLogging)
+                    .EnableDetailedErrors();
+            }, poolSize);
+
+            return serviceCollection;
         }
     }
 }

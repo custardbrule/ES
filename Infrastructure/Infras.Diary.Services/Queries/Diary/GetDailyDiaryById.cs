@@ -1,13 +1,8 @@
 ﻿using CQRS;
 using Data;
-using Domain.Diary;
 using Domain.Diary.DiaryRoot;
-using Elastic.Clients.Elasticsearch;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Seed;
+
 
 namespace Infras.Diary.Services.Queries.Diary
 {
