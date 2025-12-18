@@ -1,10 +1,12 @@
 using Infras.User.Services;
+using OpenIddict.Abstractions;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace User.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +15,27 @@ namespace User.Api
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // Configure infrastructure services (includes OpenIddict)
             builder.Services.ConfigInfras(builder.Configuration);
 
+            // Configure cookie authentication for login UI
+            builder.Services.AddAuthentication("Cookies")
+                .AddCookie("Cookies", options =>
+                {
+                    options.LoginPath = "/Account/Login";
+                    options.LogoutPath = "/Account/Logout";
+                });
+
+            builder.Services.AddAuthorization();
+
             var app = builder.Build();
+
+            // Seed OpenIddict clients
+            using (var scope = app.Services.CreateScope())
+            {
+                await SeedOpenIddictData(scope.ServiceProvider);
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -29,6 +49,7 @@ namespace User.Api
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers(); // For API controllers
@@ -37,6 +58,61 @@ namespace User.Api
                 pattern: "{controller=Home}/{action=Index}/{id?}"); // For MVC controllers
 
             app.Run();
+        }
+
+        private static async Task SeedOpenIddictData(IServiceProvider serviceProvider)
+        {
+            var manager = serviceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+            var context = serviceProvider.GetRequiredService<UserDbContext>();
+
+            await context.Database.EnsureCreatedAsync();
+
+            // Check if client already exists
+            if (await manager.FindByClientIdAsync("web-client") == null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "web-client",
+                    ClientSecret = "web-client-secret",
+                    DisplayName = "Web Client Application",
+                    RedirectUris = { new Uri("https://localhost:7001/signin-oidc") },
+                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc") },
+                    Permissions =
+                    {
+                        Permissions.Endpoints.Authorization,
+                        Permissions.Endpoints.Token,
+                        Permissions.Endpoints.Logout,
+                        Permissions.GrantTypes.AuthorizationCode,
+                        Permissions.GrantTypes.RefreshToken,
+                        Permissions.ResponseTypes.Code,
+                        Permissions.Scopes.Email,
+                        Permissions.Scopes.Profile,
+                        Permissions.Scopes.Roles
+                    }
+                });
+            }
+
+            // Add a Swagger/API client
+            if (await manager.FindByClientIdAsync("swagger-client") == null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "swagger-client",
+                    ClientSecret = "swagger-secret",
+                    DisplayName = "Swagger API Client",
+                    RedirectUris = { new Uri("https://localhost:7000/swagger/oauth2-redirect.html") },
+                    Permissions =
+                    {
+                        Permissions.Endpoints.Authorization,
+                        Permissions.Endpoints.Token,
+                        Permissions.GrantTypes.AuthorizationCode,
+                        Permissions.GrantTypes.ClientCredentials,
+                        Permissions.ResponseTypes.Code,
+                        Permissions.Scopes.Email,
+                        Permissions.Scopes.Profile
+                    }
+                });
+            }
         }
     }
 }

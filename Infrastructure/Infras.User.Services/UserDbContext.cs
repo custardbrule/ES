@@ -19,6 +19,9 @@ namespace Infras.User.Services
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure OpenIddict entities
+            modelBuilder.UseOpenIddict();
         }
     }
 }
