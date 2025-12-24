@@ -1,37 +1,37 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
-using Infras.User.Services;
 using Infras.User.Services.Constants;
 using static OpenIddict.Abstractions.OpenIddictConstants;
+using Infras.User.Services;
 
 namespace User.Api.Controllers
 {
     public class AuthController : Controller
     {
         private readonly UserDbContext _context;
-        private readonly IOpenIddictApplicationManager _applicationManager;
         private readonly IOpenIddictAuthorizationManager _authorizationManager;
         private readonly IOpenIddictScopeManager _scopeManager;
 
         public AuthController(
             UserDbContext context,
-            IOpenIddictApplicationManager applicationManager,
             IOpenIddictAuthorizationManager authorizationManager,
             IOpenIddictScopeManager scopeManager)
         {
             _context = context;
-            _applicationManager = applicationManager;
             _authorizationManager = authorizationManager;
             _scopeManager = scopeManager;
         }
 
-        [HttpGet($"~{OpenIddictConstants.Endpoints.Authorize}")]
-        [HttpPost($"~{OpenIddictConstants.Endpoints.Authorize}")]
+        #region Public Endpoints
+
+        [HttpGet($"~{AppOpenIddictConstants.Endpoints.Authorize}")]
+        [HttpPost($"~{AppOpenIddictConstants.Endpoints.Authorize}")]
         public async Task<IActionResult> Authorize()
         {
             var request = HttpContext.GetOpenIddictServerRequest() ??
@@ -44,7 +44,7 @@ namespace User.Api.Controllers
             if (result == null || !result.Succeeded || request.HasPrompt(Prompts.Login))
             {
                 return Challenge(
-                    authenticationSchemes: "Cookies",
+                    authenticationSchemes: CookieAuthenticationDefaults.AuthenticationScheme,
                     properties: new AuthenticationProperties
                     {
                         RedirectUri = Request.PathBase + Request.Path + QueryString.Create(
@@ -63,7 +63,7 @@ namespace User.Api.Controllers
 
             // Create the claims-based identity
             var identity = new ClaimsIdentity(
-                authenticationType: TokenValidationParameters.DefaultAuthenticationType,
+                authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                 nameType: Claims.Name,
                 roleType: Claims.Role);
 
@@ -88,27 +88,35 @@ namespace User.Api.Controllers
 
             // Automatically create a permanent authorization to avoid requiring explicit consent
             // for future authorization or token requests containing the same scopes
-            var authorization = await _authorizationManager.FindBySubjectAsync(user.Id.ToString());
-            if (authorization == null)
-            {
-                authorization = await _authorizationManager.CreateAsync(
+            var requestedScopes = principal.GetScopes();
+            var authorization = await _authorizationManager.FindAsync(
+                subject: user.Id.ToString(),
+                client: request.ClientId!,
+                status: Statuses.Valid,
+                type: AuthorizationTypes.Permanent,
+                scopes: requestedScopes).FirstOrDefaultAsync()
+                ?? await _authorizationManager.CreateAsync(
                     principal: principal,
                     subject: user.Id.ToString(),
                     client: request.ClientId!,
                     type: AuthorizationTypes.Permanent,
-                    scopes: principal.GetScopes());
-            }
+                    scopes: requestedScopes);
 
             principal.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
 
             // Set the resource servers the access token should be issued for
-            principal.SetResources(await _scopeManager.ListResourcesAsync(principal.GetScopes()).ToListAsync());
+            var resources = new List<string>();
+            await foreach (var resource in _scopeManager.ListResourcesAsync(principal.GetScopes()))
+            {
+                resources.Add(resource.ToString()!);
+            }
+            principal.SetResources(resources);
 
             // Sign in the user
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
-        [HttpPost($"~{OpenIddictConstants.Endpoints.Token}")]
+        [HttpPost($"~{AppOpenIddictConstants.Endpoints.Token}")]
         public async Task<IActionResult> Token()
         {
             var request = HttpContext.GetOpenIddictServerRequest() ??
@@ -136,7 +144,7 @@ namespace User.Api.Controllers
 
                 // Ensure the user is still allowed to sign in
                 var identity = new ClaimsIdentity(principal!.Claims,
-                    authenticationType: TokenValidationParameters.DefaultAuthenticationType,
+                    authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                     nameType: Claims.Name,
                     roleType: Claims.Role);
 
@@ -147,7 +155,13 @@ namespace User.Api.Controllers
                 principal = new ClaimsPrincipal(identity);
 
                 principal.SetScopes(request.GetScopes());
-                principal.SetResources(await _scopeManager.ListResourcesAsync(principal.GetScopes()).ToListAsync());
+
+                var resources = new List<string>();
+                await foreach (var resource in _scopeManager.ListResourcesAsync(principal.GetScopes()))
+                {
+                    resources.Add(resource.ToString()!);
+                }
+                principal.SetResources(resources);
 
                 return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
@@ -155,7 +169,7 @@ namespace User.Api.Controllers
             {
                 // Note: the client credentials flow is mainly used by machine-to-machine communication
                 var identity = new ClaimsIdentity(
-                    authenticationType: TokenValidationParameters.DefaultAuthenticationType,
+                    authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                     nameType: Claims.Name,
                     roleType: Claims.Role);
 
@@ -164,7 +178,13 @@ namespace User.Api.Controllers
                 var principal = new ClaimsPrincipal(identity);
 
                 principal.SetScopes(request.GetScopes());
-                principal.SetResources(await _scopeManager.ListResourcesAsync(principal.GetScopes()).ToListAsync());
+
+                var resources = new List<string>();
+                await foreach (var resource in _scopeManager.ListResourcesAsync(principal.GetScopes()))
+                {
+                    resources.Add(resource.ToString()!);
+                }
+                principal.SetResources(resources);
 
                 return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
@@ -172,8 +192,8 @@ namespace User.Api.Controllers
             throw new InvalidOperationException("The specified grant type is not supported.");
         }
 
-        [HttpGet($"~{OpenIddictConstants.Endpoints.Userinfo}")]
-        [HttpPost($"~{OpenIddictConstants.Endpoints.Userinfo}")]
+        [HttpGet($"~{AppOpenIddictConstants.Endpoints.Userinfo}")]
+        [HttpPost($"~{AppOpenIddictConstants.Endpoints.Userinfo}")]
         public async Task<IActionResult> Userinfo()
         {
             var principal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
@@ -205,7 +225,7 @@ namespace User.Api.Controllers
                 claims[Claims.Email] = user.Account;
             }
 
-            if (principal.HasScope(Scopes.Roles))
+            if (principal!.HasScope(Scopes.Roles))
             {
                 claims[Claims.Role] = user.Scopes.Select(s => s.Scope).ToArray();
             }
@@ -213,11 +233,11 @@ namespace User.Api.Controllers
             return Ok(claims);
         }
 
-        [HttpGet($"~{OpenIddictConstants.Endpoints.Logout}")]
-        [HttpPost($"~{OpenIddictConstants.Endpoints.Logout}")]
+        [HttpGet($"~{AppOpenIddictConstants.Endpoints.Logout}")]
+        [HttpPost($"~{AppOpenIddictConstants.Endpoints.Logout}")]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync("Cookies");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             return SignOut(
                 authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
@@ -226,5 +246,7 @@ namespace User.Api.Controllers
                     RedirectUri = "/"
                 });
         }
+
+        #endregion
     }
 }

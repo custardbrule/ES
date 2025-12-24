@@ -39,7 +39,7 @@ namespace App.Extensions.DependencyInjection
             return services;
         }
 
-        public static IServiceCollection RegisterQuartz(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection RegisterQuartz(this IServiceCollection services, string connectionString, string schedulerName)
         {
             services.AddQuartz(cfg =>
             {
@@ -47,7 +47,7 @@ namespace App.Extensions.DependencyInjection
                 {
                     o.UseSqlServer(c =>
                     {
-                        c.ConnectionString = configuration.GetRequiredSection("Quartz:ConnectionString").Value!;
+                        c.ConnectionString = connectionString;
                         c.TablePrefix = "QRTZ_";
                     });
                     o.UseSystemTextJsonSerializer();
@@ -55,7 +55,7 @@ namespace App.Extensions.DependencyInjection
 
                 cfg.UseSimpleTypeLoader();
                 cfg.UseDefaultThreadPool(5);
-                cfg.SchedulerName = "App_Scheduler";
+                cfg.SchedulerName = schedulerName;
             });
 
             services.AddQuartzHostedService(cfg =>

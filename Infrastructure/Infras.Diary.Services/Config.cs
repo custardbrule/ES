@@ -16,7 +16,7 @@ namespace Infras.Diary.Services
             services.AddElasticsearchCore(configuration);
             services.AddCQRS(ServiceLifetime.Transient, Assembly.GetExecutingAssembly());
             services.AddScoped(typeof(IPipeline<,>), typeof(LogPipe<,>));
-            services.RegisterQuartz(configuration);
+            services.RegisterQuartz(configuration.GetConnectionString("QuartzConnection")!, "DiaryService_Scheduler");
             services.RegisterKafkaServices(configuration, Assembly.GetExecutingAssembly());
 
             services.AddHostedService<RegisterJobHostService>();

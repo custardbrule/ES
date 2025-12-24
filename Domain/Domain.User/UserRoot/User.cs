@@ -1,4 +1,5 @@
 using Seed;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -138,6 +139,21 @@ namespace Domain.User.UserRoot
         {
             ArgumentNullException.ThrowIfNull(scope);
             return Scopes.Remove(scope);
+        }
+
+        /// <summary>
+        /// Gets the claims for this user including roles and scopes
+        /// </summary>
+        /// <returns>A list of claims for authentication</returns>
+        public List<Claim> GetClaims()
+        {
+            return
+            [
+                new(ClaimTypes.NameIdentifier, Id.ToString()),
+                new(ClaimTypes.Name, Account),
+                ..UserRoles.Select(ur => new Claim(ClaimTypes.Role, ur.RoleId.ToString())),
+                ..Scopes.Select(s => new Claim("scope", s.Scope))
+            ];
         }
 
         #region Private methods

@@ -1,4 +1,5 @@
 using Infras.User.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -20,8 +21,8 @@ namespace User.Api
             builder.Services.ConfigInfras(builder.Configuration);
 
             // Configure cookie authentication for login UI
-            builder.Services.AddAuthentication("Cookies")
-                .AddCookie("Cookies", options =>
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
                 {
                     options.LoginPath = "/Account/Login";
                     options.LogoutPath = "/Account/Logout";

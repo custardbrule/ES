@@ -1,6 +1,6 @@
 namespace Infras.User.Services.Constants
 {
-    public static class OpenIddictConstants
+    public static class AppOpenIddictConstants
     {
         public static class Endpoints
         {

@@ -1,21 +1,25 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using Infras.User.Services;
 using User.Api.Models;
+using CQRS;
+using Data;
+using Infras.User.Services.Commands;
+using Infras.User.Services.Jobs;
+using Quartz;
 
 namespace User.Api.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IPublisher _publisher;
+        private readonly IQuartzJobManager _jobManager;
 
-        public AccountController(UserDbContext context, IConfiguration configuration)
+        public AccountController(IPublisher publisher, IQuartzJobManager jobManager)
         {
-            _context = context;
-            _configuration = configuration;
+            _publisher = publisher;
+            _jobManager = jobManager;
         }
 
         [HttpGet]
@@ -36,9 +40,9 @@ namespace User.Api.Controllers
                 return View();
             }
 
-            // Find user by account
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Account == account);
+            // Authenticate user
+            var user = await _publisher.Send<AuthenticateUserCommand, Domain.User.UserRoot.User?>(
+                new AuthenticateUserCommand(account, password));
 
             if (user == null)
             {
@@ -46,37 +50,21 @@ namespace User.Api.Controllers
                 return View();
             }
 
-            // Validate password using the User domain method
-            var secretKey = _configuration["Authentication:SecretKey"] ?? "default-secret-key";
-            if (!user.ValidatePassword(password, secretKey))
-            {
-                ModelState.AddModelError(string.Empty, "Invalid account or password.");
-                return View();
-            }
-
             // Create claims principal
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Account)
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+            var claimsIdentity = new ClaimsIdentity(user.GetClaims(), CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
             // Sign in the user
-            await HttpContext.SignInAsync("Cookies", claimsPrincipal);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
-            // Log login history
-            var loginHistory = new Domain.User.UserRoot.LoginHistory(
-                Guid.NewGuid(),
-                user.Id,
-                DateTimeOffset.UtcNow,
-                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                HttpContext.Request.Headers.UserAgent.ToString()
-            );
-            _context.LoginHistories.Add(loginHistory);
-            await _context.SaveChangesAsync();
+            // Log login history in background
+            var jobData = new JobDataMap
+            {
+                { LogLoginHistoryJob.UserId, user.Id.ToString() },
+                { LogLoginHistoryJob.IpAddress, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" },
+                { LogLoginHistoryJob.UserAgent, HttpContext.Request.Headers.UserAgent.ToString() }
+            };
+            await _jobManager.Fire<LogLoginHistoryJob>(jobData);
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -89,7 +77,7 @@ namespace User.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync("Cookies");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
     }

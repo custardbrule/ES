@@ -16,7 +16,10 @@ namespace Infras.User.Services
             services.AddElasticsearchCore(configuration);
             services.AddCQRS(ServiceLifetime.Transient, Assembly.GetExecutingAssembly());
             services.AddScoped(typeof(IPipeline<,>), typeof(LogPipe<,>));
-            services.RegisterQuartz(configuration);
+            services.RegisterQuartz(
+                configuration.GetConnectionString("QuartzConnection")!,
+                "UserService_Scheduler"
+            );
             services.RegisterKafkaServices(configuration, Assembly.GetExecutingAssembly());
 
             // Configure OpenIddict
@@ -32,10 +35,10 @@ namespace Infras.User.Services
                 .AddServer(options =>
                 {
                     // Enable the authorization, token and userinfo endpoints
-                    options.SetAuthorizationEndpointUris(OpenIddictConstants.Endpoints.Authorize)
-                        .SetTokenEndpointUris(OpenIddictConstants.Endpoints.Token)
-                        .SetUserinfoEndpointUris(OpenIddictConstants.Endpoints.Userinfo)
-                        .SetLogoutEndpointUris(OpenIddictConstants.Endpoints.Logout);
+                    options.SetAuthorizationEndpointUris(AppOpenIddictConstants.Endpoints.Authorize)
+                        .SetTokenEndpointUris(AppOpenIddictConstants.Endpoints.Token)
+                        .SetUserinfoEndpointUris(AppOpenIddictConstants.Endpoints.Userinfo)
+                        .SetLogoutEndpointUris(AppOpenIddictConstants.Endpoints.Logout);
 
                     // Enable the authorization code flow with PKCE
                     options.AllowAuthorizationCodeFlow()
@@ -43,18 +46,19 @@ namespace Infras.User.Services
                         .AllowRefreshTokenFlow()
                         .AllowClientCredentialsFlow();
 
-                    // Configure token formats - Use JWT for access tokens
-                    options.UseAccessTokens()
-                        .UseJsonWebTokens();
-
                     // Register signing and encryption credentials
+                    // Access tokens and identity tokens will be issued as JWT by default
                     options.AddDevelopmentEncryptionCertificate()
                         .AddDevelopmentSigningCertificate();
+
+                    // Disable access token encryption (so clients can read JWT claims)
+                    options.DisableAccessTokenEncryption();
 
                     // Configure token lifetimes
                     options.SetAccessTokenLifetime(TimeSpan.FromMinutes(30))
                         .SetRefreshTokenLifetime(TimeSpan.FromDays(7))
-                        .SetAuthorizationCodeLifetime(TimeSpan.FromMinutes(5));
+                        .SetAuthorizationCodeLifetime(TimeSpan.FromMinutes(5))
+                        .SetIdentityTokenLifetime(TimeSpan.FromMinutes(30));
 
                     // Register ASP.NET Core host and configure ASP.NET Core-specific options
                     options.UseAspNetCore()

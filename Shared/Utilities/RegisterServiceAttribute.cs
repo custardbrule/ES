@@ -34,12 +34,4 @@ namespace Utilities
         {
         }
     }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class RegisterServiceAttribute<TService> : RegisterServiceAttribute<TService, TService>
-    {
-        public RegisterServiceAttribute(ServiceLifetime serviceLifetime = ServiceLifetime.Scoped, string key = "") : base(serviceLifetime, key)
-        {
-        }
-    }
 }
