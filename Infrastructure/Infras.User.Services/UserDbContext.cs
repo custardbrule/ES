@@ -15,6 +15,7 @@ namespace Infras.User.Services
         public DbSet<UserScope> UserScopes { get; set; }
         public DbSet<RoleScope> RoleScopes { get; set; }
         public DbSet<LoginHistory> LoginHistories { get; set; }
+        public DbSet<RecoveryCode> RecoveryCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

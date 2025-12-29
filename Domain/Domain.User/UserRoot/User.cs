@@ -24,6 +24,7 @@ namespace Domain.User.UserRoot
         public ICollection<UserRole> UserRoles { get; init; } = [];
         public ICollection<LoginHistory> LoginHistories { get; init; } = [];
         public ICollection<UserScope> Scopes { get; init; } = [];
+        public ICollection<RecoveryCode> RecoveryCodes { get; init; } = [];
 
         /// <summary>
         /// Creates a new user with the specified account and hashed password
