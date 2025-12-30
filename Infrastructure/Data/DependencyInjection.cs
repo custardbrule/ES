@@ -102,6 +102,9 @@ namespace App.Extensions.DependencyInjection
                     .EnableDetailedErrors();
             }, poolSize);
 
+            // not ideal if you use pool
+            serviceCollection.AddScoped(sp => sp.GetRequiredService<IDbContextFactory<T>>().CreateDbContext());
+
             return serviceCollection;
         }
     }

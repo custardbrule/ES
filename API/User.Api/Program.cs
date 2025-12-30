@@ -1,5 +1,6 @@
 using Infras.User.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -66,7 +67,8 @@ namespace User.Api
             var manager = serviceProvider.GetRequiredService<IOpenIddictApplicationManager>();
             var context = serviceProvider.GetRequiredService<UserDbContext>();
 
-            await context.Database.EnsureCreatedAsync();
+            // Apply pending migrations
+            await context.Database.MigrateAsync();
 
             // Check if client already exists
             if (await manager.FindByClientIdAsync("web-client") == null)

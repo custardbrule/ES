@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
@@ -19,7 +23,7 @@
   </ItemGroup>
 
   <Target Name="Tailwind" BeforeTargets="Build">
-    <Exec Command="npm run css:build"/>
+    <Exec Command="npm run css:build" />
   </Target>
 
 </Project>

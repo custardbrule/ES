@@ -17,11 +17,13 @@ namespace Infras.User.Services.Commands
         int Count = 10
     ) : IRequest<List<string>>;
 
-    internal sealed class GenerateRecoveryCodesHandler(UserDbContext context)
+    internal sealed class GenerateRecoveryCodesHandler(IDbContextFactory<UserDbContext> contextFactory)
         : IHandler<GenerateRecoveryCodesCommand, List<string>>
     {
         public async Task<List<string>> Handle(GenerateRecoveryCodesCommand request, CancellationToken cancellationToken)
         {
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
             var user = await context.Users
                 .Include(u => u.RecoveryCodes)
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)

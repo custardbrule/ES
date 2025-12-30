@@ -21,11 +21,15 @@ namespace Infras.User.Services.Commands
         List<string> RecoveryCodes
     );
 
-    internal sealed class RegisterUserHandler(UserDbContext context, IConfiguration configuration)
+    internal sealed class RegisterUserHandler(
+        IDbContextFactory<UserDbContext> contextFactory,
+        IConfiguration configuration)
         : IHandler<RegisterUserCommand, RegisterUserResult>
     {
         public async Task<RegisterUserResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
             // Check if account already exists
             var existingUser = await context.Users
                 .FirstOrDefaultAsync(u => u.Account == request.Account, cancellationToken);

@@ -1,0 +1,74 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# IDE
+.vscode
+.vs
+.idea
+*.swp
+*.swo
+*~
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/dist/
+**/build/
+
+# Node modules
+**/node_modules/
+**/npm-debug.log
+**/.npm
+
+# Angular
+diary-fe/.angular/
+diary-fe/dist/
+diary-fe/.sass-cache/
+
+# .NET
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+**/project.lock.json
+**/project.fragment.lock.json
+**/artifacts/
+
+# NuGet
+**/packages/
+**/*.nupkg
+**/*.snupkg
+
+# Test results
+**/TestResults/
+**/*.trx
+**/*.coverage
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Docker
+docker-compose.yml
+docker-compose.override.yml
+.dockerignore
+**/Dockerfile
+**/.dockerignore
+
+# Documentation
+*.md
+docs/
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example

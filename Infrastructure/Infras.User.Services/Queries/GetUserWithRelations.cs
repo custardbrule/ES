@@ -5,18 +5,14 @@ namespace Infras.User.Services.Queries
 {
     public sealed record GetUserWithRelationsQuery(Guid UserId) : IRequest<Domain.User.UserRoot.User>;
 
-    internal sealed class GetUserWithRelationsHandler : IHandler<GetUserWithRelationsQuery, Domain.User.UserRoot.User>
+    internal sealed class GetUserWithRelationsHandler(IDbContextFactory<UserDbContext> contextFactory)
+        : IHandler<GetUserWithRelationsQuery, Domain.User.UserRoot.User>
     {
-        private readonly UserDbContext _context;
-
-        public GetUserWithRelationsHandler(UserDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task<Domain.User.UserRoot.User> Handle(GetUserWithRelationsQuery request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+            var user = await context.Users
                 .Include(u => u.UserRoles)
                 .Include(u => u.Scopes)
                 .Include(u => u.LoginHistories)

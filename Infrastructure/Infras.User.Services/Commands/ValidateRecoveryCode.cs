@@ -16,11 +16,13 @@ namespace Infras.User.Services.Commands
         string RecoveryCode
     ) : IRequest<Guid?>;
 
-    internal sealed class ValidateRecoveryCodeHandler(UserDbContext context)
+    internal sealed class ValidateRecoveryCodeHandler(IDbContextFactory<UserDbContext> contextFactory)
         : IHandler<ValidateRecoveryCodeCommand, Guid?>
     {
         public async Task<Guid?> Handle(ValidateRecoveryCodeCommand request, CancellationToken cancellationToken)
         {
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
             var user = await context.Users
                 .Include(u => u.RecoveryCodes)
                 .FirstOrDefaultAsync(u => u.Account == request.Account, cancellationToken);

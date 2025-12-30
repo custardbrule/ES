@@ -1,0 +1,196 @@
+version: '3.8'
+
+services:
+  # SQL Server for QuartzDB and UserDB
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: es-mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Kioliki24
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    networks:
+      - es-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Kioliki24 -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  # Elasticsearch for search and snapshots
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.2
+    container_name: es-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=changeme
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - es-network
+    healthcheck:
+      test: curl -u elastic:changeme -f http://localhost:9200/_cluster/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Kafka for event streaming
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: es-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - es-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: es-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - es-network
+    healthcheck:
+      test: kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # EventStoreDB (KurrentDB) for Event Sourcing
+  eventstoredb:
+    image: eventstore/eventstore:latest
+    container_name: es-eventstoredb
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "2113:2113"
+      - "1113:1113"
+    volumes:
+      - eventstoredb-data:/var/lib/eventstore
+    networks:
+      - es-network
+    healthcheck:
+      test: curl -f http://localhost:2113/health/live || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # User API
+  user-api:
+    build:
+      context: .
+      dockerfile: API/User.Api/Dockerfile
+    container_name: es-user-api
+    ports:
+      - "5189:5189"
+      - "7155:7155"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5189;https://+:7155
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=UserDB;User Id=sa;Password=Kioliki24;TrustServerCertificate=True;
+      - ConnectionStrings__QuartzConnection=Server=mssql;Database=QuartzJob;User Id=sa;Password=Kioliki24;TrustServerCertificate=True;
+      - ElasticSearchSettings__Url=http://elasticsearch:9200
+      - ElasticSearchSettings__Username=elastic
+      - ElasticSearchSettings__Password=changeme
+      - KafkaSettings__BootstrapServers=kafka:29092
+    depends_on:
+      mssql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eventstoredb:
+        condition: service_healthy
+    networks:
+      - es-network
+    restart: unless-stopped
+
+  # Diary API
+  diary-api:
+    build:
+      context: .
+      dockerfile: API/Diary.Api/Dockerfile
+    container_name: es-diary-api
+    ports:
+      - "5075:5075"
+      - "7119:7119"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5075;https://+:7119
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=DiaryDB;User Id=sa;Password=Kioliki24;TrustServerCertificate=True;
+      - ConnectionStrings__QuartzConnection=Server=mssql;Database=QuartzJob;User Id=sa;Password=Kioliki24;TrustServerCertificate=True;
+      - ElasticSearchSettings__Url=http://elasticsearch:9200
+      - ElasticSearchSettings__Username=elastic
+      - ElasticSearchSettings__Password=changeme
+      - KafkaSettings__BootstrapServers=kafka:29092
+    depends_on:
+      mssql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eventstoredb:
+        condition: service_healthy
+    networks:
+      - es-network
+    restart: unless-stopped
+
+  # Angular Frontend
+  diary-fe:
+    build:
+      context: ./diary-fe
+      dockerfile: Dockerfile
+    container_name: es-diary-fe
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - user-api
+      - diary-api
+    networks:
+      - es-network
+    restart: unless-stopped
+
+networks:
+  es-network:
+    driver: bridge
+
+volumes:
+  mssql-data:
+  elasticsearch-data:
+  eventstoredb-data:

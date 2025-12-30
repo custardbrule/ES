@@ -1,5 +1,6 @@
 using CQRS;
 using Domain.User.UserRoot;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infras.User.Services.Commands
 {
@@ -9,17 +10,13 @@ namespace Infras.User.Services.Commands
         string UserAgent
     ) : IRequest;
 
-    internal sealed class LogLoginHistoryHandler : IHandler<LogLoginHistoryCommand>
+    internal sealed class LogLoginHistoryHandler(IDbContextFactory<UserDbContext> contextFactory)
+        : IHandler<LogLoginHistoryCommand>
     {
-        private readonly UserDbContext _context;
-
-        public LogLoginHistoryHandler(UserDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task<Unit> Handle(LogLoginHistoryCommand request, CancellationToken cancellationToken)
         {
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
             var loginHistory = new LoginHistory(
                 Guid.NewGuid(),
                 request.UserId,
@@ -28,8 +25,8 @@ namespace Infras.User.Services.Commands
                 request.UserAgent
             );
 
-            _context.LoginHistories.Add(loginHistory);
-            await _context.SaveChangesAsync(cancellationToken);
+            context.LoginHistories.Add(loginHistory);
+            await context.SaveChangesAsync(cancellationToken);
 
             return Unit.Value;
         }

@@ -36,6 +36,29 @@ Add ElasticSearchSettings
 Add [Quartz](https://www.quartz-scheduler.net/documentation/quartz-3.x/packages/microsoft-di-integration.html#using)
 Quartz DB [Links](https://github.com/quartznet/quartznet/tree/1644b15832f75042a8f6900af16b5cde652a553e/database/tables)
 
+## Database Migrations
+
+This project uses **EF Core Migrations** for database schema management.
+
+### Working with Migrations
+
+**Create a new migration:**
+```bash
+cd API/User.Api
+dotnet ef migrations add YourMigrationName --project "..\..\Infrastructure\Infras.User.Services\Infras.User.Services.csproj" --startup-project . --context UserDbContext
+```
+
+**Apply migrations to database:**
+Migrations are automatically applied on application startup via `MigrateAsync()` in Program.cs.
+
+**Remove last migration (if not applied):**
+```bash
+dotnet ef migrations remove --project "..\..\Infrastructure\Infras.User.Services\Infras.User.Services.csproj" --startup-project . --context UserDbContext
+```
+
+**Migration files location:**
+`Infrastructure/Infras.User.Services/Migrations/`
+
 Add KafkaSettings
 
 ```
