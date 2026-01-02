@@ -1,8 +1,11 @@
+using System.Text.RegularExpressions;
 using CQRS;
 using Data;
 using Domain.User.UserRoot;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using RequestValidatior;
+using Utilities;
 
 namespace Infras.User.Services.Commands
 {
@@ -16,6 +19,26 @@ namespace Infras.User.Services.Commands
         string Password
     ) : IRequest<RegisterUserResult>;
 
+    public sealed partial class RegisterUserCommandValidator : BaseValidator<RegisterUserCommand>
+    {
+        [GeneratedRegex(ValidationConstants.AccountPattern)]
+        private static partial Regex AccountRegex();
+
+        [GeneratedRegex(ValidationConstants.PasswordPattern)]
+        private static partial Regex PasswordRegex();
+
+        public RegisterUserCommandValidator()
+        {
+            RuleFor(x => x.Account)
+                .With(account => !string.IsNullOrWhiteSpace(account), "Account is required")
+                .With(account => AccountRegex().IsMatch(account), ValidationConstants.AccountValidationMessage);
+
+            RuleFor(x => x.Password)
+                .With(password => !string.IsNullOrWhiteSpace(password), "Password is required")
+                .With(password => PasswordRegex().IsMatch(password), ValidationConstants.PasswordValidationMessage);
+        }
+    }
+
     public sealed record RegisterUserResult(
         Guid UserId,
         List<string> RecoveryCodes
@@ -28,6 +51,7 @@ namespace Infras.User.Services.Commands
     {
         public async Task<RegisterUserResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
+            // Validation is handled by ValidationPipe
             await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
             // Check if account already exists

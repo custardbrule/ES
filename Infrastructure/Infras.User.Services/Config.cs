@@ -5,6 +5,8 @@ using App.Extensions.DependencyInjection;
 using System.Reflection;
 using Infras.User.Services.Pipelines;
 using Infras.User.Services.Constants;
+using Infras.User.Services.Commands;
+using RequestValidatior;
 
 namespace Infras.User.Services
 {
@@ -15,7 +17,14 @@ namespace Infras.User.Services
             services.RegisterDbContextPool<UserDbContext>(configuration.GetConnectionString("UserConnection")!);
             services.AddElasticsearchCore(configuration);
             services.AddCQRS(ServiceLifetime.Transient, Assembly.GetExecutingAssembly());
+
+            // Register pipelines
+            services.AddScoped(typeof(IPipeline<,>), typeof(ValidationPipe<,>));
             services.AddScoped(typeof(IPipeline<,>), typeof(LogPipe<,>));
+
+            // Register validators
+            services.AddSingleton<BaseValidator<RegisterUserCommand>, RegisterUserCommandValidator>();
+
             services.RegisterQuartz(
                 configuration.GetConnectionString("QuartzConnection")!,
                 "UserService_Scheduler"

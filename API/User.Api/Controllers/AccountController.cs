@@ -9,6 +9,7 @@ using Infras.User.Services.Commands;
 using Infras.User.Services.Queries;
 using Infras.User.Services.Jobs;
 using Quartz;
+using RequestValidatior;
 
 namespace User.Api.Controllers
 {
@@ -91,24 +92,6 @@ namespace User.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(string account, string password, string confirmPassword)
         {
-            if (string.IsNullOrWhiteSpace(account) || string.IsNullOrWhiteSpace(password))
-            {
-                ModelState.AddModelError(string.Empty, "Account and password are required.");
-                return View();
-            }
-
-            if (account.Length < 3)
-            {
-                ModelState.AddModelError(string.Empty, "Account must be at least 3 characters.");
-                return View();
-            }
-
-            if (password.Length < 6)
-            {
-                ModelState.AddModelError(string.Empty, "Password must be at least 6 characters.");
-                return View();
-            }
-
             if (password != confirmPassword)
             {
                 ModelState.AddModelError(string.Empty, "Passwords do not match.");
@@ -132,6 +115,18 @@ namespace User.Api.Controllers
                 // Show recovery codes
                 TempData["RecoveryCodes"] = System.Text.Json.JsonSerializer.Serialize(result.RecoveryCodes);
                 return RedirectToAction("ShowRecoveryCodes");
+            }
+            catch (ValidationError ex)
+            {
+                // Add validation errors to ModelState
+                foreach (var (field, errors) in ex.Errors)
+                {
+                    foreach (var error in errors)
+                    {
+                        ModelState.AddModelError(field, error);
+                    }
+                }
+                return View();
             }
             catch (InvalidOperationException ex)
             {

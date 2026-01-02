@@ -10,8 +10,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - User.Api</title>
     <link rel="stylesheet" href="~/css/styles.css" />
+    <style>
+        .tooltip-content {
+            display: none;
+        }
+        .tooltip-container:hover .tooltip-content {
+            display: block;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-linear-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
     <div class="max-w-md w-full">
         <!-- Logo/Brand Section -->
         <div class="text-center mb-8">
@@ -27,7 +35,7 @@
 
                 <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
                     <div class="flex">
-                        <div class="flex-shrink-0">
+                        <div class="shrink-0">
                             <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                             </svg>
@@ -42,39 +50,59 @@
 
                 <!-- Account Field -->
                 <div class="mb-6">
-                    <label for="account" class="block text-sm font-medium text-gray-700 mb-2">
-                        Account <span class="text-red-500">*</span>
-                    </label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="account" class="text-sm font-medium text-gray-700">
+                            Account <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative tooltip-container">
+                            <img src="~/images/svgs/info-circle.svg" alt="info" class="w-5 h-5 cursor-help" />
+                            <div class="tooltip-content absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-800 rounded shadow-lg right-0 top-0 mt-6 w-64">
+                                At least 6 characters, only letters, numbers, @@, _, or -
+                            </div>
+                        </div>
+                    </div>
                     <input
                         type="text"
                         id="account"
                         name="account"
+                        value="@ViewData.ModelState["account"]?.AttemptedValue"
                         required
-                        minlength="3"
-                        maxlength="50"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                         placeholder="Choose your account name"
                         autocomplete="username"
                     />
-                    <p class="mt-1 text-xs text-gray-500">At least 3 characters</p>
+                    @if (ViewData.ModelState.ContainsKey("Account") && ViewData.ModelState["Account"]?.Errors.Count > 0)
+                    {
+                        <span class="text-red-500 text-xs mt-1 block">@ViewData.ModelState["Account"]?.Errors[0].ErrorMessage</span>
+                    }
                 </div>
 
                 <!-- Password Field -->
                 <div class="mb-6">
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Password <span class="text-red-500">*</span>
-                    </label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="password" class="text-sm font-medium text-gray-700">
+                            Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative tooltip-container">
+                            <img src="~/images/svgs/info-circle.svg" alt="info" class="w-5 h-5 cursor-help" />
+                            <div class="tooltip-content absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-800 rounded shadow-lg right-0 top-0 mt-6 w-64">
+                                At least 8 characters with 1 uppercase, 1 number, and 1 special character (@@$!%*?&)
+                            </div>
+                        </div>
+                    </div>
                     <input
                         type="password"
                         id="password"
                         name="password"
                         required
-                        minlength="6"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                         placeholder="Choose a strong password"
                         autocomplete="new-password"
                     />
-                    <p class="mt-1 text-xs text-gray-500">At least 6 characters</p>
+                    @if (ViewData.ModelState.ContainsKey("Password") && ViewData.ModelState["Password"]?.Errors.Count > 0)
+                    {
+                        <span class="text-red-500 text-xs mt-1 block">@ViewData.ModelState["Password"]?.Errors[0].ErrorMessage</span>
+                    }
                 </div>
 
                 <!-- Confirm Password Field -->
@@ -87,7 +115,6 @@
                         id="confirmPassword"
                         name="confirmPassword"
                         required
-                        minlength="6"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                         placeholder="Confirm your password"
                         autocomplete="new-password"

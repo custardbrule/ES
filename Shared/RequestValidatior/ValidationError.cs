@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RequestValidatior
 {
-    public class ValidationError
+    public class ValidationError : Exception
     {
         public string Type => "https://tools.ietf.org/html/rfc7231#section-6.5.1";
         public string Title => "One or more validation errors occurred.";
