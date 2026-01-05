@@ -10,14 +10,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - User.Api</title>
     <link rel="stylesheet" href="~/css/styles.css" />
-    <style>
-        .tooltip-content {
-            display: none;
-        }
-        .tooltip-container:hover .tooltip-content {
-            display: block;
-        }
-    </style>
 </head>
 <body class="bg-linear-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
     <div class="max-w-md w-full">
@@ -30,6 +22,8 @@
         <!-- Register Card -->
         <div class="bg-white rounded-2xl shadow-xl p-8">
             <form method="post" asp-action="Register" asp-controller="Account">
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
                 <!-- Validation Summary -->
                 <div asp-validation-summary="All" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm" style="display:none;"></div>
 

@@ -65,10 +65,48 @@ namespace User.Api
         private static async Task SeedOpenIddictData(IServiceProvider serviceProvider)
         {
             var manager = serviceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+            var scopeManager = serviceProvider.GetRequiredService<IOpenIddictScopeManager>();
             var context = serviceProvider.GetRequiredService<UserDbContext>();
 
             // Apply pending migrations
             await context.Database.MigrateAsync();
+
+            // Seed scopes
+            if (await scopeManager.FindByNameAsync(Scopes.OpenId) == null)
+            {
+                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    Name = Scopes.OpenId,
+                    DisplayName = "OpenID"
+                });
+            }
+
+            if (await scopeManager.FindByNameAsync(Scopes.Email) == null)
+            {
+                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    Name = Scopes.Email,
+                    DisplayName = "Email"
+                });
+            }
+
+            if (await scopeManager.FindByNameAsync(Scopes.Profile) == null)
+            {
+                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    Name = Scopes.Profile,
+                    DisplayName = "Profile"
+                });
+            }
+
+            if (await scopeManager.FindByNameAsync(Scopes.Roles) == null)
+            {
+                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    Name = Scopes.Roles,
+                    DisplayName = "Roles"
+                });
+            }
 
             // Check if client already exists
             if (await manager.FindByClientIdAsync("web-client") == null)
@@ -88,9 +126,11 @@ namespace User.Api
                         Permissions.GrantTypes.AuthorizationCode,
                         Permissions.GrantTypes.RefreshToken,
                         Permissions.ResponseTypes.Code,
+                        $"{Permissions.Prefixes.Scope}{Scopes.OpenId}",
                         Permissions.Scopes.Email,
                         Permissions.Scopes.Profile,
-                        Permissions.Scopes.Roles
+                        Permissions.Scopes.Roles,
+                        Requirements.Features.ProofKeyForCodeExchange
                     }
                 });
             }
@@ -111,8 +151,10 @@ namespace User.Api
                         Permissions.GrantTypes.AuthorizationCode,
                         Permissions.GrantTypes.ClientCredentials,
                         Permissions.ResponseTypes.Code,
+                        $"{Permissions.Prefixes.Scope}{Scopes.OpenId}",
                         Permissions.Scopes.Email,
-                        Permissions.Scopes.Profile
+                        Permissions.Scopes.Profile,
+                        Requirements.Features.ProofKeyForCodeExchange
                     }
                 });
             }

@@ -17,15 +17,18 @@ namespace User.Api.Controllers
         private readonly UserDbContext _context;
         private readonly IOpenIddictAuthorizationManager _authorizationManager;
         private readonly IOpenIddictScopeManager _scopeManager;
+        private readonly IOpenIddictApplicationManager _applicationManager;
 
         public AuthController(
             UserDbContext context,
             IOpenIddictAuthorizationManager authorizationManager,
-            IOpenIddictScopeManager scopeManager)
+            IOpenIddictScopeManager scopeManager,
+            IOpenIddictApplicationManager applicationManager)
         {
             _context = context;
             _authorizationManager = authorizationManager;
             _scopeManager = scopeManager;
+            _applicationManager = applicationManager;
         }
 
         #region Public Endpoints
@@ -61,6 +64,48 @@ namespace User.Api.Controllers
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
+            // Check if user has already granted consent
+            var existingAuthorization = await _authorizationManager.FindAsync(
+                subject: user.Id.ToString(),
+                client: request.ClientId!,
+                status: Statuses.Valid,
+                type: AuthorizationTypes.Permanent,
+                scopes: request.GetScopes()).FirstOrDefaultAsync();
+
+            // If POST request with consent decision
+            if (HttpContext.Request.Method == "POST")
+            {
+                var consentDecision = Request.Form["consent"].ToString();
+
+                if (consentDecision == "deny")
+                {
+                    return Forbid(
+                        authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                        properties: new AuthenticationProperties(new Dictionary<string, string?>
+                        {
+                            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.AccessDenied,
+                            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The user denied access to the application."
+                        }));
+                }
+
+                // User allowed access, continue with authorization
+            }
+            // If no existing authorization and not a consent response, show consent screen
+            else if (existingAuthorization == null)
+            {
+                // Get application name
+                var application = await _applicationManager.FindByClientIdAsync(request.ClientId!);
+                var displayName = application != null
+                    ? await _applicationManager.GetDisplayNameAsync(application)
+                    : request.ClientId;
+
+                ViewBag.ApplicationName = displayName;
+                ViewBag.UserAccount = user.Account;
+                ViewBag.Scopes = request.GetScopes().ToArray();
+
+                return View("~/Views/Auth/Consent.cshtml");
+            }
+
             // Create the claims-based identity
             var identity = new ClaimsIdentity(
                 authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
@@ -86,15 +131,9 @@ namespace User.Api.Controllers
             // Set the list of scopes granted to the client application
             principal.SetScopes(request.GetScopes());
 
-            // Automatically create a permanent authorization to avoid requiring explicit consent
-            // for future authorization or token requests containing the same scopes
+            // Create or reuse permanent authorization after user consent
             var requestedScopes = principal.GetScopes();
-            var authorization = await _authorizationManager.FindAsync(
-                subject: user.Id.ToString(),
-                client: request.ClientId!,
-                status: Statuses.Valid,
-                type: AuthorizationTypes.Permanent,
-                scopes: requestedScopes).FirstOrDefaultAsync()
+            var authorization = existingAuthorization
                 ?? await _authorizationManager.CreateAsync(
                     principal: principal,
                     subject: user.Id.ToString(),

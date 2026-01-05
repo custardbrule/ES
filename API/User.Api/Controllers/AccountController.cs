@@ -84,14 +84,17 @@ namespace User.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(string account, string password, string confirmPassword)
+        public async Task<IActionResult> Register(string account, string password, string confirmPassword, string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
+
             if (password != confirmPassword)
             {
                 ModelState.AddModelError(string.Empty, "Passwords do not match.");
@@ -114,6 +117,7 @@ namespace User.Api.Controllers
 
                 // Show recovery codes
                 TempData["RecoveryCodes"] = System.Text.Json.JsonSerializer.Serialize(result.RecoveryCodes);
+                TempData["ReturnUrl"] = returnUrl;
                 return RedirectToAction("ShowRecoveryCodes");
             }
             catch (ValidationError ex)
@@ -165,6 +169,13 @@ namespace User.Api.Controllers
         [HttpPost]
         public IActionResult ConfirmRecoveryCodes()
         {
+            var returnUrl = TempData["ReturnUrl"] as string;
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
