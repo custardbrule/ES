@@ -2,6 +2,7 @@ using Infras.User.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
+using User.Api.Middleware;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace User.Api
@@ -40,6 +41,8 @@ namespace User.Api
             }
 
             // Configure the HTTP request pipeline.
+            app.UseExceptionHandling();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -71,7 +74,7 @@ namespace User.Api
             // Apply pending migrations
             await context.Database.MigrateAsync();
 
-            // Seed scopes
+            // Seed scopes if not exist
             if (await scopeManager.FindByNameAsync(Scopes.OpenId) == null)
             {
                 await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
@@ -79,28 +82,19 @@ namespace User.Api
                     Name = Scopes.OpenId,
                     DisplayName = "OpenID"
                 });
-            }
 
-            if (await scopeManager.FindByNameAsync(Scopes.Email) == null)
-            {
                 await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
                 {
                     Name = Scopes.Email,
                     DisplayName = "Email"
                 });
-            }
 
-            if (await scopeManager.FindByNameAsync(Scopes.Profile) == null)
-            {
                 await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
                 {
                     Name = Scopes.Profile,
                     DisplayName = "Profile"
                 });
-            }
 
-            if (await scopeManager.FindByNameAsync(Scopes.Roles) == null)
-            {
                 await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
                 {
                     Name = Scopes.Roles,
