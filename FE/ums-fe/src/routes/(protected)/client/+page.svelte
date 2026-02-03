@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { Table } from '$lib/components';
 </script>
 
@@ -8,6 +8,18 @@
 	<!-- table -->
 	<Table
 		data={[
+			{
+				name: 'John Doe',
+				name1: 'John Doe',
+				name2: 'John Doe',
+				nam3e: 'John Doe',
+				name4: 'John Doe',
+				name5: 'John Doe',
+				nam6e: 'John Doe',
+				nam7e: 'John Doe',
+				name8: 'John Doe',
+				email: 'John Doe'
+			},
 			{
 				name: 'John Doe',
 				name1: 'John Doe',
