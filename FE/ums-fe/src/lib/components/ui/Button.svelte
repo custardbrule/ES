@@ -10,6 +10,7 @@
 		size?: Size;
 		loading?: boolean;
 		children?: Snippet;
+		className?: string;
 	}
 
 	let {
@@ -23,10 +24,10 @@
 	}: Props = $props();
 
 	const variants: Record<Variant, string> = {
-		primary: 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800',
-		secondary: 'bg-gray-600 text-white hover:bg-gray-700 active:bg-gray-800',
-		outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 active:bg-gray-100',
-		ghost: 'bg-transparent hover:bg-gray-100 active:bg-gray-200',
+		primary: 'bg-primary text-white hover:opacity-90 active:opacity-80',
+		secondary: 'bg-secondary-bg text-secondary-text hover:opacity-90 active:opacity-80',
+		outline: 'border border-primary bg-transparent text-primary hover:bg-primary-bg active:opacity-80',
+		ghost: 'bg-transparent text-primary hover:bg-primary-bg active:opacity-80',
 		danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800'
 	};
 
@@ -43,7 +44,7 @@
 	disabled={disabled || loading}
 	class="
 		inline-flex items-center justify-center gap-2 rounded-md font-medium
-		transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none
+		transition-colors focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none
 		disabled:cursor-not-allowed disabled:opacity-50
 		{variants[variant]}
 		{sizes[size]}

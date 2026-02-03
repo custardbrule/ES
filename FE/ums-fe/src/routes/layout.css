@@ -1,2 +1,10 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+@theme {
+	--color-primary: #30364F;
+	--color-primary-bg: #30364F;
+	--color-primary-text: #ACBAC4;
+	--color-secondary-bg: #F0F0DB;
+	--color-secondary-text: #e2d090;
+}

@@ -107,11 +107,12 @@ namespace User.Api
             {
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
-                    ClientId = "web-client",
-                    ClientSecret = "web-client-secret",
-                    DisplayName = "Web Client Application",
-                    RedirectUris = { new Uri("https://localhost:7001/signin-oidc") },
-                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc") },
+                    ClientId = "ums-client",
+                    ClientSecret = "ums-client-secret",
+                    DisplayName = "UMS Client Application",
+                    ClientType = ClientTypes.Public,
+                    RedirectUris = { new Uri("https://localhost:7001/signin-oidc"), new Uri("http://localhost:5173/callback") },
+                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("https://localhost:5173/signout-callback-oidc") },
                     Permissions =
                     {
                         Permissions.Endpoints.Authorization,
