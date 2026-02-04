@@ -1,12 +1,7 @@
 <script lang="ts">
-	import type { HTMLInputAttributes } from 'svelte/elements';
+	import type { InputProps } from '$lib/types';
 
-	interface Props extends HTMLInputAttributes {
-		value?: string;
-		inputClass?: string;
-	}
-
-	let { value = $bindable(''), inputClass = '', type = 'text', id, ...rest }: Props = $props();
+	let { value = $bindable(''), inputClass = '', type = 'text', id, ...rest }: InputProps = $props();
 </script>
 
 <div class="relative flex items-center">
@@ -23,3 +18,19 @@
 		"
 	/>
 </div>
+
+<style lang="scss">
+	input {
+		&::-webkit-outer-spin-button,
+		&::-webkit-inner-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+
+		/* Firefox */
+		&[type='number'] {
+			-moz-appearance: textfield;
+			appearance: none;
+		}
+	}
+</style>

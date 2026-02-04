@@ -1,49 +1,63 @@
 <script lang="ts">
-	import { Table } from '$lib/components';
+	import { Table, Input, Button, Modal } from '$lib/components';
 
+	let showCreateModal = $state(false);
+	let createModel = $state({ name: '', description: '' });
+
+	const handleCreate = () => {
+		console.log(createModel);
+		showCreateModal = false;
+	}
 	const columns = [
 		{ label: 'Name', key: 'name' },
 		{ label: 'Name', key: 'name1' },
-		{ label: 'Name', key: 'name2' },
-		{ label: 'Name', key: 'nam3e' },
-		{ label: 'Name', key: 'name4' },
-		{ label: 'Name', key: 'name5' },
-		{ label: 'Name', key: 'nam6e' },
-		{ label: 'Name', key: 'nam7e' },
-		{ label: 'Name', key: 'name8' },
-		{ label: 'Email', key: 'email' }
+		{ label: 'Name', key: 'name2' }
 	];
 	const datas = [
 		{
 			name: 'John Doe',
 			name1: 'John Doe',
-			name2: 'John Doe',
-			nam3e: 'John Doe',
-			name4: 'John Doe',
-			name5: 'John Doe',
-			nam6e: 'John Doe',
-			nam7e: 'John Doe',
-			name8: 'John Doe',
-			email: 'John Doe'
-		},
-		{
-			name: 'John Doe',
-			name1: 'John Doe',
-			name2: 'John Doe',
-			nam3e: 'John Doe',
-			name4: 'John Doe',
-			name5: 'John Doe',
-			nam6e: 'John Doe',
-			nam7e: 'John Doe',
-			name8: 'John Doe',
-			email: 'John Doe'
+			name2: 'John Doe'
 		}
 	];
+	const paging = { currentPage: 1, totalPage: 12 };
+
+	const onPageChange = (page: number) => paging.currentPage = page;
 </script>
 
 <div class="flex h-full w-full flex-col gap-4 p-4 text-primary-text">
-	<h1 class="text-3xl font-semibold">Clients</h1>
+	<div class="flex justify-between items-center">
+		<h1 class="text-3xl font-semibold">Clients</h1>
+		<Button onclick={() => showCreateModal = true} size="md" variant="secondary">Add Client</Button>
+	</div>
 
 	<!-- table -->
-	<Table {datas} {columns} />
+	<div
+		style="max-height: calc(var(--content-height) - 36px - var(--space)*3);"
+		class="flex-1 overflow-hidden"
+	>
+		<Table {datas} {columns} showPaging={true} {paging} {onPageChange} />
+	</div>
 </div>
+
+<Modal
+  open={showCreateModal}
+  title="New Client"
+  onClose={() => showCreateModal = false}
+>
+  <div class="flex flex-col gap-4">
+	<div class="flex flex-col gap-2">
+		<label for="name">Name</label>
+		<Input id="Name" placeholder="Name" bind:value={createModel.name} />
+	</div>
+	<div class="flex flex-col gap-2">
+		<label for="description">Description</label>
+		<Input id="Description" placeholder="Description" bind:value={createModel.description} />
+	</div>
+  </div>
+  
+  {#snippet footer()}
+    <Button variant="ghost" onclick={() => showCreateModal = false}>Cancel</Button>
+    <Button onclick={handleCreate}>Confirm</Button>
+  {/snippet}
+</Modal>

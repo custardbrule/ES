@@ -2,9 +2,30 @@
 @plugin '@tailwindcss/typography';
 
 @theme {
-	--color-primary: #30364F;
-	--color-primary-bg: #30364F;
-	--color-primary-text: #ACBAC4;
-	--color-secondary-bg: #F0F0DB;
-	--color-secondary-text: #e2d090;
+	--color-primary: #30364f;
+	--color-primary-bg: #30364f;
+	--color-primary-text: #acbac4;
+	--color-secondary-bg: #f0f0db;
+	--color-secondary-text: #c6a222;
+}
+
+:root {
+	--content-height: calc(100vh - 24px - var(--spacing) * 8);
+}
+
+/* scrollbar */
+*::-webkit-scrollbar {
+	width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+	border-radius: 12px;
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+	background-color: rgb(75, 85, 131);
+}
+
+*::-webkit-scrollbar-thumb {
+	border-radius: 12px;
+	background-color: darkgrey;
+	outline: 1px solid slategrey;
 }

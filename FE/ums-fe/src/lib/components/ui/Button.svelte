@@ -1,17 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import type { HTMLButtonAttributes } from 'svelte/elements';
-
-	type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-	type Size = 'sm' | 'md' | 'lg';
-
-	interface Props extends HTMLButtonAttributes {
-		variant?: Variant;
-		size?: Size;
-		loading?: boolean;
-		children?: Snippet;
-		className?: string;
-	}
+	import type { ButtonProps, ButtonVariant, Size } from '$lib/types';
 
 	let {
 		variant = 'primary',
@@ -21,13 +9,13 @@
 		children,
 		class: className = '',
 		...rest
-	}: Props = $props();
+	}: ButtonProps = $props();
 
-	const variants: Record<Variant, string> = {
+	const variants: Record<ButtonVariant, string> = {
 		primary: 'bg-primary text-white hover:opacity-90 active:opacity-80',
 		secondary: 'bg-secondary-bg text-secondary-text hover:opacity-90 active:opacity-80',
 		outline: 'border border-primary bg-transparent text-primary hover:bg-primary-bg active:opacity-80',
-		ghost: 'bg-transparent text-primary hover:bg-primary-bg active:opacity-80',
+		ghost: 'bg-transparent text-primary hover:bg-gray-300 active:opacity-80',
 		danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800'
 	};
 

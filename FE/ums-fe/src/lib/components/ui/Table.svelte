@@ -1,34 +1,31 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type { TableProps } from '$lib/types';
+	import Paging from './Paging.svelte';
 
-	interface Column {
-		label: string;
-		key: string;
-	}
-
-	interface Props {
-		datas?: Record<string, unknown>[];
-		columns?: Column[];
-		row?: Snippet<[{ data: Record<string, unknown>; columns: Column[]; rowIndex: number }]>;
-		header?: Snippet<[{ columns: Column[] }]>;
-		empty?: Snippet;
-	}
-
-	let { datas = [], columns = [], row, header, empty }: Props = $props();
+	let {
+		datas = [],
+		columns = [],
+		showPaging = false,
+		paging = { currentPage: 1, totalPage: 1 },
+		row,
+		header,
+		empty,
+		onPageChange
+	}: TableProps = $props();
 </script>
 
-<div class="flex h-full w-full flex-col gap-4">
-	<div class="overflow-auto">
-		<table class="min-h-full min-w-full border-collapse">
-			<thead>
+<div class="flex h-full w-full flex-col gap-2">
+	<div class="flex-1 overflow-auto rounded-md">
+		<table class="min-w-full border-collapse">
+			<thead class="sticky top-0 z-20">
 				<tr class="bg-gray-100">
 					{#if header}
 						{@render header({ columns })}
 					{:else}
 						{#each columns as column, colIndex (column.key)}
 							<th
-								class="p-3 text-left whitespace-nowrap
-									{colIndex === 0 ? 'sticky left-0 z-20 bg-gray-100' : ''}"
+								class="bg-gray-100 p-3 text-left whitespace-nowrap
+									{colIndex === 0 ? 'sticky left-0 z-30 w-2xs' : ''}"
 							>
 								{column.label}
 							</th>
@@ -49,14 +46,14 @@
 					</tr>
 				{:else}
 					{#each datas as data, rowIndex}
-						<tr class="border-b hover:bg-gray-100">
+						<tr class="border-b hover:bg-gray-200">
 							{#if row}
 								{@render row({ data, columns, rowIndex })}
 							{:else}
 								{#each columns as column, colIndex (column.key)}
 									<td
 										class="p-3 whitespace-nowrap
-											{colIndex === 0 ? 'sticky left-0 z-10 bg-white' : ''}"
+											{colIndex === 0 ? 'sticky left-0 z-10 w-2xs bg-white' : ''}"
 									>
 										{data[column.key]}
 									</td>
@@ -69,5 +66,11 @@
 		</table>
 	</div>
 	<!-- paging -->
-	<div></div>
+	{#if showPaging}
+		<Paging
+			currentPage={paging.currentPage}
+			totalPage={paging.totalPage}
+			{onPageChange}
+		/>
+	{/if}
 </div>
