@@ -10,15 +10,14 @@ type ValidationResult<S> = {
 
 type FieldChain<S, T extends keyof S> = {
 	add: (validate: (value: S[T]) => boolean, message: string) => FieldChain<S, T>;
-	for: <K extends keyof S>(field: K) => FieldChain<S, K>;
 };
 
 class ValidatorBuilder<S> {
 	private rules = new Map<keyof S, ValidationRule[]>();
 
-	static create<T>(...configs: Array<(builder: ValidatorBuilder<T>) => void>): ValidatorBuilder<T> {
+	static create<T>(config: (builder: ValidatorBuilder<T>) => void): ValidatorBuilder<T> {
 		const builder = new ValidatorBuilder<T>();
-		configs.forEach((config) => config(builder));
+		config(builder);
 		return builder;
 	}
 
@@ -32,8 +31,7 @@ class ValidatorBuilder<S> {
 			add: (validate, message) => {
 				fieldRules.push({ validate: validate as (value: unknown) => boolean, message });
 				return chain;
-			},
-			for: <K extends keyof S>(f: K) => this.for(f)
+			}
 		};
 
 		return chain;

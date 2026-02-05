@@ -1,11 +1,49 @@
 import type { Snippet } from 'svelte';
 import type { HTMLButtonAttributes, HTMLInputAttributes } from 'svelte/elements';
+import type { ValidatorBuilder, ValidationResult } from '$lib/validator';
 
 // ============================================
 // Shared Types
 // ============================================
 
 export type Size = 'sm' | 'md' | 'lg';
+
+// ============================================
+// Form Types
+// ============================================
+
+export type FormFieldType = 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'checkbox';
+
+export interface FormFieldOption {
+	label: string;
+	value: string;
+}
+
+export interface FormField<T> {
+	name: keyof T & string;
+	label: string;
+	type?: FormFieldType;
+	placeholder?: string;
+	options?: FormFieldOption[]; // for select
+	disabled?: boolean;
+	class?: string;
+}
+
+export interface FormState<T> {
+	touched: Partial<Record<keyof T, boolean>>;
+	submitted: boolean;
+}
+
+export interface FormProps<T> {
+	model: T;
+	fields: FormField<T>[];
+	validator?: ValidatorBuilder<T>;
+	validationResult?: ValidationResult<T>;
+	state?: FormState<T>;
+	onsubmit?: (model: T) => void | Promise<void>;
+	class?: string;
+	children?: Snippet;
+}
 
 // ============================================
 // Button Types
@@ -49,7 +87,6 @@ export interface ModalProps {
 	title?: string;
 	children?: Snippet;
 	footer?: Snippet;
-	closeOnBackdrop?: boolean;
 	class?: string;
 	dialogEl?: HTMLDialogElement;
 }

@@ -8,6 +8,7 @@
 		disabled,
 		children,
 		class: className = '',
+		type = 'button',
 		...rest
 	}: ButtonProps = $props();
 
@@ -28,7 +29,7 @@
 
 <button
 	{...rest}
-	type="button"
+	{type}
 	disabled={disabled || loading}
 	class="
 		inline-flex items-center justify-center gap-2 rounded-md font-medium

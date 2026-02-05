@@ -1,54 +1,93 @@
 <script lang="ts">
-	import { Table, Input, Button, Modal } from '$lib/components';
+	import { Table, Form, Button, Modal } from '$lib/components';
 	import { goto, invalidateAll } from '$app/navigation';
-	import type { CreateClientModel } from '$lib/types';
+	import type { CreateClientModel, FormField, FormState } from '$lib/types';
+	import type { ValidationResult } from '$lib/validator';
 	import { ValidatorBuilder, rules } from '$lib/validator';
 
 	let { data } = $props();
 
-	let dialogRef = $state<HTMLDialogElement>();
-	let createModel = $state<CreateClientModel>({
+	// Form model with string fields for UI
+	interface ClientFormModel {
+		displayName: string;
+		clientType: string;
+		redirectUris: string;
+		postLogoutRedirectUris: string;
+		permissions: string;
+	}
+
+	const initialModel: ClientFormModel = {
 		displayName: '',
 		clientType: 'confidential',
-		redirectUris: [],
-		postLogoutRedirectUris: [],
-		permissions: []
-	});
+		redirectUris: '',
+		postLogoutRedirectUris: '',
+		permissions: ''
+	};
+
+	let dialogRef = $state<HTMLDialogElement>();
+	let formModel = $state<ClientFormModel>({ ...initialModel });
+	let validationResult = $state<ValidationResult<ClientFormModel>>();
+	let formState = $state<FormState<ClientFormModel>>({ touched: {}, submitted: false });
 	let loading = $state(false);
-	let error = $state('');
 
-	const validator = ValidatorBuilder.create<CreateClientModel>(
-		(b) =>
-			b
-				.for('displayName')
-				.add(rules.required, 'Display name is required')
-				.add(rules.minLength(3), 'Display name must be at least 3 characters')
-				.add(rules.maxLength(100), 'Display name must be at most 100 characters'),
-		(b) =>
-			b
-				.for('redirectUris')
-				.add(rules.required, 'Redirect URIs are required')
-				.add(rules.minItems(1), 'At least one redirect URI is required'),
-		(b) =>
-			b
-				.for('postLogoutRedirectUris')
-				.add(rules.required, 'Post logout redirect URIs are required')
-				.add(rules.minItems(1), 'At least one post logout redirect URI is required'),
-		(b) => b.for('permissions').add(rules.required, 'Permissions are required')
-	);
-	let validationResult = $derived(validator.validate(createModel));
+	const validator = ValidatorBuilder.create<ClientFormModel>((b) => {
+		b.for('displayName')
+			.add(rules.required, 'Display name is required')
+			.add(rules.minLength(3), 'Display name must be at least 3 characters')
+			.add(rules.maxLength(100), 'Display name must be at most 100 characters');
+		b.for('redirectUris').add(rules.required, 'At least one redirect URI is required');
+		b.for('postLogoutRedirectUris').add(
+			rules.required,
+			'At least one post logout redirect URI is required'
+		);
+		b.for('permissions').add(rules.required, 'Permissions are required');
+	});
 
-	const handleCreate = async () => {
-		if (!validationResult.isValid) return;
+	const fields: FormField<ClientFormModel>[] = [
+		{ name: 'displayName', label: 'Display Name', placeholder: 'My Application' },
+		{
+			name: 'clientType',
+			label: 'Client Type',
+			type: 'select',
+			options: [
+				{ label: 'Confidential', value: 'confidential' },
+				{ label: 'Public', value: 'public' }
+			]
+		},
+		{
+			name: 'redirectUris',
+			label: 'Redirect URIs',
+			placeholder: 'https://example.com/callback (comma separated)'
+		},
+		{
+			name: 'postLogoutRedirectUris',
+			label: 'Post Logout Redirect URIs',
+			placeholder: 'https://example.com/logout (comma separated)'
+		},
+		{ name: 'permissions', label: 'Permissions', placeholder: 'read, write (comma separated)' }
+	];
 
+	const handleCreate = async (form: ClientFormModel) => {
 		loading = true;
-		error = '';
+		const toArray = (str: string) =>
+			str
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean);
+
+		const transform: CreateClientModel = {
+			displayName: form.displayName,
+			clientType: form.clientType as 'confidential' | 'public',
+			redirectUris: toArray(form.redirectUris),
+			postLogoutRedirectUris: toArray(form.postLogoutRedirectUris),
+			permissions: toArray(form.permissions)
+		};
 
 		try {
 			const res = await fetch('/api/clients', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(createModel)
+				body: JSON.stringify(transform)
 			});
 
 			if (!res.ok) {
@@ -56,19 +95,14 @@
 				throw new Error(data.error || 'Failed to create client');
 			}
 
-			dialogRef?.close();
-			createModel = {
-				displayName: '',
-				clientType: 'confidential',
-				redirectUris: [],
-				postLogoutRedirectUris: [],
-				permissions: []
-			};
+			formModel = { ...initialModel };
+			formState = { touched: {}, submitted: false };
 			await invalidateAll();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
+			console.log(err);
 		} finally {
 			loading = false;
+			dialogRef?.close();
 		}
 	};
 
@@ -99,89 +133,18 @@
 </div>
 
 <Modal bind:dialogEl={dialogRef} title="New Client" size="lg">
-	<div class="flex flex-col gap-4">
-		{#if error}
-			<div class="rounded bg-red-100 p-2 text-sm text-red-600">{error}</div>
-		{/if}
-
-		<div class="flex flex-col gap-1">
-			<label for="displayName">Display Name</label>
-			<Input id="displayName" placeholder="My Application" bind:value={createModel.displayName} />
-			{#if validationResult.errors.displayName}
-				<span class="text-xs text-red-500">{validationResult.errors.displayName[0]}</span>
-			{/if}
-		</div>
-
-		<div class="flex flex-col gap-2">
-			<label for="clientType">Client Type</label>
-			<select
-				id="clientType"
-				bind:value={createModel.clientType}
-				class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-			>
-				<option value="confidential">Confidential</option>
-				<option value="public">Public</option>
-			</select>
-		</div>
-
-		<div class="flex flex-col gap-1">
-			<label for="redirectUris">Redirect URIs</label>
-			<Input
-				id="redirectUris"
-				placeholder="https://example.com/callback (comma separated)"
-				value={createModel.redirectUris.join(', ')}
-				oninput={(e) => {
-					createModel.redirectUris = e.currentTarget.value
-						.split(',')
-						.map((s) => s.trim())
-						.filter(Boolean);
-				}}
-			/>
-			{#if validationResult.errors.redirectUris}
-				<span class="text-xs text-red-500">{validationResult.errors.redirectUris[0]}</span>
-			{/if}
-		</div>
-
-		<div class="flex flex-col gap-1">
-			<label for="postLogoutRedirectUris">Post Logout Redirect URIs</label>
-			<Input
-				id="postLogoutRedirectUris"
-				placeholder="https://example.com/logout (comma separated)"
-				value={createModel.postLogoutRedirectUris.join(', ')}
-				oninput={(e) => {
-					createModel.postLogoutRedirectUris = e.currentTarget.value
-						.split(',')
-						.map((s) => s.trim())
-						.filter(Boolean);
-				}}
-			/>
-			{#if validationResult.errors.postLogoutRedirectUris}
-				<span class="text-xs text-red-500">{validationResult.errors.postLogoutRedirectUris[0]}</span
-				>
-			{/if}
-		</div>
-
-		<div class="flex flex-col gap-1">
-			<label for="permissions">Permissions</label>
-			<Input
-				id="permissions"
-				placeholder="read, write (comma separated)"
-				value={createModel.permissions.join(', ')}
-				oninput={(e) => {
-					createModel.permissions = e.currentTarget.value
-						.split(',')
-						.map((s) => s.trim())
-						.filter(Boolean);
-				}}
-			/>
-			{#if validationResult.errors.permissions}
-				<span class="text-xs text-red-500">{validationResult.errors.permissions[0]}</span>
-			{/if}
-		</div>
-	</div>
-
-	{#snippet footer()}
+	<Form
+		bind:model={formModel}
+		bind:validationResult
+		bind:state={formState}
+		{validator}
+		{fields}
+		onsubmit={handleCreate}
+	></Form>
+	<div class="flex justify-end gap-2 pt-4">
 		<Button variant="ghost" onclick={() => dialogRef?.close()} disabled={loading}>Cancel</Button>
-		<Button onclick={handleCreate} {loading} disabled={!validationResult.isValid}>Create</Button>
-	{/snippet}
+		<Button {loading} disabled={!validationResult?.isValid} onclick={() => handleCreate(formModel)}
+			>Create</Button
+		>
+	</div>
 </Modal>

@@ -6,7 +6,6 @@
 		title,
 		children,
 		footer,
-		closeOnBackdrop = true,
 		class: className = '',
 		dialogEl = $bindable<HTMLDialogElement>()
 	}: ModalProps = $props();
@@ -16,12 +15,6 @@
 		md: 'max-w-md',
 		lg: 'max-w-2xl'
 	};
-
-	function handleBackdropClick(event: MouseEvent) {
-		if (closeOnBackdrop && event.target === dialogEl) {
-			dialogEl?.close();
-		}
-	}
 </script>
 
 <dialog
@@ -32,7 +25,6 @@
 		{sizes[size]}
 		{className}
 	"
-	onclick={handleBackdropClick}
 >
 	<!-- Header -->
 	{#if title}
