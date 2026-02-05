@@ -2,6 +2,7 @@
 	import type { FormProps, FormField, FormState } from '$lib/types';
 	import type { ValidationResult } from '$lib/validator';
 	import Input from './Input.svelte';
+	import ArrayInput from './ArrayInput.svelte';
 
 	let {
 		model = $bindable() as T,
@@ -90,6 +91,13 @@
 					onblur={() => handleBlur(field.name)}
 					disabled={field.disabled}
 					class="h-4 w-4"
+				/>
+			{:else if field.type === 'array'}
+				<ArrayInput
+					value={getFieldValue(field) as string[]}
+					onchange={(val) => updateField(field, val)}
+					placeholder={field.placeholder}
+					disabled={field.disabled}
 				/>
 			{:else}
 				<Input

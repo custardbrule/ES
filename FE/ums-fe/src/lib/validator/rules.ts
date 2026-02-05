@@ -78,6 +78,12 @@ export const unique = (value: unknown[]): boolean => {
 	return new Set(value).size === value.length;
 };
 
+export const each =
+	<T>(validator: (item: T) => boolean) =>
+	(value: T[]): boolean => {
+		return value.every(validator);
+	};
+
 // ============================================
 // Comparison Validators
 // ============================================

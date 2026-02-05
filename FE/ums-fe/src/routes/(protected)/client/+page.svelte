@@ -7,43 +7,35 @@
 
 	let { data } = $props();
 
-	// Form model with string fields for UI
-	interface ClientFormModel {
-		displayName: string;
-		clientType: string;
-		redirectUris: string;
-		postLogoutRedirectUris: string;
-		permissions: string;
-	}
-
-	const initialModel: ClientFormModel = {
+	const getInitialModel = (): CreateClientModel => ({
 		displayName: '',
 		clientType: 'confidential',
-		redirectUris: '',
-		postLogoutRedirectUris: '',
-		permissions: ''
-	};
+		redirectUris: [],
+		postLogoutRedirectUris: [],
+		permissions: []
+	});
 
 	let dialogRef = $state<HTMLDialogElement>();
-	let formModel = $state<ClientFormModel>({ ...initialModel });
-	let validationResult = $state<ValidationResult<ClientFormModel>>();
-	let formState = $state<FormState<ClientFormModel>>({ touched: {}, submitted: false });
+	let formModel = $state<CreateClientModel>(getInitialModel());
+	let validationResult = $state<ValidationResult<CreateClientModel>>();
+	let formState = $state<FormState<CreateClientModel>>({ touched: {}, submitted: false });
 	let loading = $state(false);
 
-	const validator = ValidatorBuilder.create<ClientFormModel>((b) => {
+	const validator = ValidatorBuilder.create<CreateClientModel>((b) => {
 		b.for('displayName')
 			.add(rules.required, 'Display name is required')
 			.add(rules.minLength(3), 'Display name must be at least 3 characters')
 			.add(rules.maxLength(100), 'Display name must be at most 100 characters');
-		b.for('redirectUris').add(rules.required, 'At least one redirect URI is required');
-		b.for('postLogoutRedirectUris').add(
-			rules.required,
-			'At least one post logout redirect URI is required'
-		);
+		b.for('redirectUris')
+			.add(rules.required, 'At least one redirect URI is required')
+			.add(rules.each(rules.url), 'All redirect URIs must be valid URLs');
+		b.for('postLogoutRedirectUris')
+			.add(rules.required, 'At least one post logout redirect URI is required')
+			.add(rules.each(rules.url), 'All post logout redirect URIs must be valid URLs');
 		b.for('permissions').add(rules.required, 'Permissions are required');
 	});
 
-	const fields: FormField<ClientFormModel>[] = [
+	const fields: FormField<CreateClientModel>[] = [
 		{ name: 'displayName', label: 'Display Name', placeholder: 'My Application' },
 		{
 			name: 'clientType',
@@ -57,37 +49,26 @@
 		{
 			name: 'redirectUris',
 			label: 'Redirect URIs',
-			placeholder: 'https://example.com/callback (comma separated)'
+			type: 'array',
+			placeholder: 'https://example.com/callback'
 		},
 		{
 			name: 'postLogoutRedirectUris',
 			label: 'Post Logout Redirect URIs',
-			placeholder: 'https://example.com/logout (comma separated)'
+			type: 'array',
+			placeholder: 'https://example.com/logout'
 		},
-		{ name: 'permissions', label: 'Permissions', placeholder: 'read, write (comma separated)' }
+		{ name: 'permissions', label: 'Permissions', type: 'array', placeholder: 'read, write' }
 	];
 
-	const handleCreate = async (form: ClientFormModel) => {
+	const handleCreate = async (form: CreateClientModel) => {
 		loading = true;
-		const toArray = (str: string) =>
-			str
-				.split(',')
-				.map((s) => s.trim())
-				.filter(Boolean);
-
-		const transform: CreateClientModel = {
-			displayName: form.displayName,
-			clientType: form.clientType as 'confidential' | 'public',
-			redirectUris: toArray(form.redirectUris),
-			postLogoutRedirectUris: toArray(form.postLogoutRedirectUris),
-			permissions: toArray(form.permissions)
-		};
 
 		try {
 			const res = await fetch('/api/clients', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(transform)
+				body: JSON.stringify(form)
 			});
 
 			if (!res.ok) {
@@ -95,14 +76,14 @@
 				throw new Error(data.error || 'Failed to create client');
 			}
 
-			formModel = { ...initialModel };
-			formState = { touched: {}, submitted: false };
 			await invalidateAll();
 		} catch (err) {
 			console.log(err);
 		} finally {
 			loading = false;
 			dialogRef?.close();
+			formModel = getInitialModel();
+			formState = { touched: {}, submitted: false };
 		}
 	};
 

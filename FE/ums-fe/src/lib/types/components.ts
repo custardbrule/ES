@@ -1,5 +1,9 @@
 import type { Snippet } from 'svelte';
-import type { HTMLButtonAttributes, HTMLInputAttributes } from 'svelte/elements';
+import type {
+	HTMLButtonAttributes,
+	HTMLFormAttributes,
+	HTMLInputAttributes
+} from 'svelte/elements';
 import type { ValidatorBuilder, ValidationResult } from '$lib/validator';
 
 // ============================================
@@ -12,7 +16,15 @@ export type Size = 'sm' | 'md' | 'lg';
 // Form Types
 // ============================================
 
-export type FormFieldType = 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'checkbox';
+export type FormFieldType =
+	| 'text'
+	| 'email'
+	| 'password'
+	| 'number'
+	| 'textarea'
+	| 'select'
+	| 'checkbox'
+	| 'array';
 
 export interface FormFieldOption {
 	label: string;
@@ -34,7 +46,7 @@ export interface FormState<T> {
 	submitted: boolean;
 }
 
-export interface FormProps<T> {
+export interface FormProps<T> extends Omit<HTMLFormAttributes, 'onsubmit'> {
 	model: T;
 	fields: FormField<T>[];
 	validator?: ValidatorBuilder<T>;
