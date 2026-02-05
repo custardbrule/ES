@@ -24,11 +24,12 @@ export type FormFieldType =
 	| 'textarea'
 	| 'select'
 	| 'checkbox'
-	| 'array';
+	| 'array'
+	| 'multiselect';
 
 export interface FormFieldOption {
 	label: string;
-	value: string;
+	value: unknown;
 }
 
 export interface FormField<T> {

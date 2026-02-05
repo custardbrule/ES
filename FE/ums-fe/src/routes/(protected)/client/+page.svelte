@@ -58,7 +58,17 @@
 			type: 'array',
 			placeholder: 'https://example.com/logout'
 		},
-		{ name: 'permissions', label: 'Permissions', type: 'array', placeholder: 'read, write' }
+		{
+			name: 'permissions',
+			label: 'Permissions',
+			type: 'multiselect',
+			placeholder: 'read, write',
+			options: [
+				{ label: 'Read', value: 'read' },
+				{ label: 'Write', value: 'write' },
+				{ label: 'Admin', value: 'admin' }
+			]
+		}
 	];
 
 	const handleCreate = async (form: CreateClientModel) => {
@@ -113,7 +123,7 @@
 	</div>
 </div>
 
-<Modal bind:dialogEl={dialogRef} title="New Client" size="lg">
+<Modal class={'overflow-visible'} bind:dialogEl={dialogRef} title="New Client" size="lg">
 	<Form
 		bind:model={formModel}
 		bind:validationResult

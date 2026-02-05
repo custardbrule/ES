@@ -3,6 +3,8 @@
 	import type { ValidationResult } from '$lib/validator';
 	import Input from './Input.svelte';
 	import ArrayInput from './ArrayInput.svelte';
+	import Dropdown from './Dropdown.svelte';
+	import MultiDropdown from './MultiDropdown.svelte';
 
 	let {
 		model = $bindable() as T,
@@ -60,18 +62,14 @@
 			<label for={field.name}>{field.label}</label>
 
 			{#if field.type === 'select' && field.options}
-				<select
+				<Dropdown
 					id={field.name}
 					value={getFieldValue(field) as string}
-					onchange={(e) => updateField(field, e.currentTarget.value)}
-					onblur={() => handleBlur(field.name)}
+					onchange={(val) => { updateField(field, val); handleBlur(field.name); }}
+					options={field.options}
+					placeholder={field.placeholder}
 					disabled={field.disabled}
-					class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{#each field.options as option}
-						<option value={option.value}>{option.label}</option>
-					{/each}
-				</select>
+				/>
 			{:else if field.type === 'textarea'}
 				<textarea
 					id={field.name}
@@ -92,10 +90,19 @@
 					disabled={field.disabled}
 					class="h-4 w-4"
 				/>
+			{:else if field.type === 'multiselect' && field.options}
+				<MultiDropdown
+					id={field.name}
+					value={getFieldValue(field) as unknown[]}
+					onchange={(val) => { updateField(field, val); handleBlur(field.name); }}
+					options={field.options}
+					placeholder={field.placeholder}
+					disabled={field.disabled}
+				/>
 			{:else if field.type === 'array'}
 				<ArrayInput
 					value={getFieldValue(field) as string[]}
-					onchange={(val) => updateField(field, val)}
+					onchange={(val) => { updateField(field, val); handleBlur(field.name); }}
 					placeholder={field.placeholder}
 					disabled={field.disabled}
 				/>
