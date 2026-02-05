@@ -2,17 +2,14 @@
 	import type { ModalProps, Size } from '$lib/types';
 
 	let {
-		open = false,
 		size = 'md',
 		title,
 		children,
 		footer,
 		closeOnBackdrop = true,
-		onClose,
-		class: className = ''
+		class: className = '',
+		dialogEl = $bindable<HTMLDialogElement>()
 	}: ModalProps = $props();
-
-	let dialogEl: HTMLDialogElement;
 
 	const sizes: Record<Size, string> = {
 		sm: 'max-w-sm',
@@ -20,25 +17,9 @@
 		lg: 'max-w-2xl'
 	};
 
-	$effect(() => {
-		if (!dialogEl) return;
-
-		if (open) {
-			dialogEl.showModal();
-		} else {
-			dialogEl.close();
-		}
-	});
-
-	function handleClose() {
-		if (onClose) {
-			onClose();
-		}
-	}
-
 	function handleBackdropClick(event: MouseEvent) {
 		if (closeOnBackdrop && event.target === dialogEl) {
-			handleClose();
+			dialogEl?.close();
 		}
 	}
 </script>
@@ -51,30 +32,27 @@
 		{sizes[size]}
 		{className}
 	"
-	onclose={handleClose}
 	onclick={handleBackdropClick}
 >
 	<!-- Header -->
 	{#if title}
 		<div class="flex items-center justify-between px-6 py-4">
 			<h2 class="text-lg font-semibold text-gray-900">{title}</h2>
-			{#if onClose}
-				<button
-					aria-label="Close"
-					type="button"
-					class="rounded p-1 text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
-					onclick={handleClose}
-				>
-					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						/>
-					</svg>
-				</button>
-			{/if}
+			<button
+				aria-label="Close"
+				type="button"
+				class="rounded p-1 text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
+				onclick={() => dialogEl?.close()}
+			>
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
+				</svg>
+			</button>
 		</div>
 	{/if}
 

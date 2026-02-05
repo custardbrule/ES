@@ -45,14 +45,13 @@ export interface PagingProps {
 // ============================================
 
 export interface ModalProps {
-	open?: boolean;
 	size?: Size;
 	title?: string;
 	children?: Snippet;
 	footer?: Snippet;
 	closeOnBackdrop?: boolean;
-	onClose?: () => void;
 	class?: string;
+	dialogEl?: HTMLDialogElement;
 }
 
 // ============================================
