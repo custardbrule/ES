@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { Table, Form, Button, Modal } from '$lib/components';
 	import { goto, invalidateAll } from '$app/navigation';
-	import type { CreateClientModel, FormField, FormState } from '$lib/types';
+	import type {
+		ClientViewModel,
+		CreateClientModel,
+		FormField,
+		FormState,
+		IModel,
+		TableColumn
+	} from '$lib/types';
 	import type { ValidationResult } from '$lib/validator';
 	import { ValidatorBuilder, rules } from '$lib/validator';
 
-	let { data } = $props();
+	let { data: pageData } = $props();
 
 	const getInitialModel = (): CreateClientModel => ({
 		displayName: '',
@@ -114,12 +121,50 @@
 		class="flex-1 overflow-hidden"
 	>
 		<Table
-			datas={data.datas}
-			columns={data.columns}
+			datas={pageData.datas as IModel<ClientViewModel>[]}
+			columns={pageData.columns}
 			showPaging={true}
-			paging={data.paging}
+			paging={pageData.paging}
 			{onPageChange}
-		/>
+		>
+			{#snippet row({
+				data,
+				columns,
+				rowIndex
+			}: {
+				data: IModel<ClientViewModel>;
+				columns: TableColumn<IModel<ClientViewModel>>[];
+				rowIndex: number;
+			})}
+				<td class="sticky left-0 z-10 bg-white p-3 whitespace-nowrap text-right">
+					{data.id}
+				</td>
+				<td class="p-3 whitespace-nowrap">
+					{data.clientId}
+				</td>
+				<td class="p-3 whitespace-nowrap">
+					{data.clientType}
+				</td>
+				<td class="p-3 whitespace-nowrap">
+					{data.displayName}
+				</td>
+				<td class="p-3">
+					{#each data.redirectUris as uri}
+						<span class="mb-1 block px-2 bg-gray-100 rounded w-fit text-sm">{uri}</span>
+					{/each}
+				</td>
+				<td class="p-3">
+					{#each data.postLogoutRedirectUris as uri}
+						<span class="mb-1 block px-2 bg-gray-100 rounded w-fit text-sm">{uri}</span>
+					{/each}
+				</td>
+				<td class="p-3">
+					{#each data.permissions as permission}
+						<span class="flex gap-2 mb-1 px-2 bg-gray-100 rounded w-fit text-sm">{permission}</span>
+					{/each}
+				</td>
+			{/snippet}
+		</Table>
 	</div>
 </div>
 

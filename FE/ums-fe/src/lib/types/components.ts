@@ -111,18 +111,19 @@ export interface ModalProps {
 // Table Types
 // ============================================
 
-export interface TableColumn {
+export interface TableColumn<T = Record<string, unknown>> {
 	label: string;
-	key: string;
+	key: keyof T & string;
 }
 
-export interface TableProps {
-	datas?: Record<string, unknown>[];
-	columns?: TableColumn[];
+export interface TableProps<T = Record<string, unknown>> {
+	datas?: T[];
+	columns?: TableColumn<T>[];
 	showPaging?: boolean;
 	paging?: PagingProps;
-	row?: Snippet<[{ data: Record<string, unknown>; columns: TableColumn[]; rowIndex: number }]>;
-	header?: Snippet<[{ columns: TableColumn[] }]>;
+	trackBy?: keyof T;
+	row?: Snippet<[{ data: T; columns: TableColumn<T>[]; rowIndex: number }]>;
+	header?: Snippet<[{ columns: TableColumn<T>[] }]>;
 	empty?: Snippet;
 	onPageChange?: (page: number) => void;
 }
