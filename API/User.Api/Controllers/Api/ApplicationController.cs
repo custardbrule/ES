@@ -8,7 +8,7 @@ namespace User.Api.Controllers.Api
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AllowAnonymous]
     public class ApplicationController : ControllerBase
     {
         private readonly IPublisher _publisher;

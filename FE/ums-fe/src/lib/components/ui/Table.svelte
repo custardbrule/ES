@@ -16,14 +16,14 @@
 </script>
 
 {#snippet tableRow(data: T, rowIndex: number)}
-	<tr class="border-b hover:bg-gray-200">
+	<tr class="border-b hover:bg-gray-500">
 		{#if row}
 			{@render row({ data, columns, rowIndex })}
 		{:else}
 			{#each columns as column, colIndex (column.key)}
 				<td
 					class="p-3 whitespace-nowrap
-						{colIndex === 0 ? 'sticky left-0 z-10 text-right bg-white' : ''}"
+						{colIndex === 0 ? 'sticky left-0 z-10 bg-white text-right' : ''}"
 				>
 					{data[column.key]}
 				</td>

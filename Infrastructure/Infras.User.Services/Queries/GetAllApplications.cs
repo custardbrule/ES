@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using CQRS;
 using OpenIddict.Abstractions;
 
@@ -9,7 +10,10 @@ namespace Infras.User.Services.Queries
         string Id,
         string ClientId,
         string DisplayName,
-        string Type
+        string ClientType,
+        ImmutableArray<string> RedirectUris,
+        ImmutableArray<string> PostLogoutRedirectUris,
+        ImmutableArray<string> Permissions
     );
 
     internal sealed class GetAllApplicationsHandler(
@@ -26,7 +30,10 @@ namespace Infras.User.Services.Queries
                     Id: await applicationManager.GetIdAsync(app, cancellationToken) ?? string.Empty,
                     ClientId: await applicationManager.GetClientIdAsync(app, cancellationToken) ?? string.Empty,
                     DisplayName: await applicationManager.GetDisplayNameAsync(app, cancellationToken) ?? string.Empty,
-                    Type: await applicationManager.GetClientTypeAsync(app, cancellationToken) ?? string.Empty
+                    ClientType: await applicationManager.GetClientTypeAsync(app, cancellationToken) ?? string.Empty,
+                    RedirectUris: await applicationManager.GetRedirectUrisAsync(app, cancellationToken),
+                    PostLogoutRedirectUris: await applicationManager.GetPostLogoutRedirectUrisAsync(app, cancellationToken),
+                    Permissions: await applicationManager.GetPermissionsAsync(app, cancellationToken)
                 ));
             }
 

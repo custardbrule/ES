@@ -65,7 +65,10 @@
 				<Dropdown
 					id={field.name}
 					value={getFieldValue(field) as string}
-					onchange={(val) => { updateField(field, val); handleBlur(field.name); }}
+					onchange={(val) => {
+						updateField(field, val);
+						handleBlur(field.name);
+					}}
 					options={field.options}
 					placeholder={field.placeholder}
 					disabled={field.disabled}
@@ -94,15 +97,22 @@
 				<MultiDropdown
 					id={field.name}
 					value={getFieldValue(field) as unknown[]}
-					onchange={(val) => { updateField(field, val); handleBlur(field.name); }}
+					onchange={(val) => {
+						updateField(field, val);
+						handleBlur(field.name);
+					}}
 					options={field.options}
 					placeholder={field.placeholder}
 					disabled={field.disabled}
 				/>
 			{:else if field.type === 'array'}
 				<ArrayInput
+					id={field.name}
 					value={getFieldValue(field) as string[]}
-					onchange={(val) => { updateField(field, val); handleBlur(field.name); }}
+					onchange={(val) => {
+						updateField(field, val);
+						handleBlur(field.name);
+					}}
 					placeholder={field.placeholder}
 					disabled={field.disabled}
 				/>

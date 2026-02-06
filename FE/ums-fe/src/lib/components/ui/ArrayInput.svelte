@@ -9,6 +9,7 @@
 	}
 
 	let {
+		id,
 		value = $bindable([]) as T[],
 		placeholder = '',
 		inputClass = '',
@@ -73,6 +74,7 @@
 			</span>
 		{/each}
 		<input
+			{id}
 			{...rest}
 			{type}
 			bind:value={inputValue}

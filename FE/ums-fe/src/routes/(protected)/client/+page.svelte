@@ -136,7 +136,7 @@
 				columns: TableColumn<IModel<ClientViewModel>>[];
 				rowIndex: number;
 			})}
-				<td class="sticky left-0 z-10 bg-white p-3 whitespace-nowrap text-right">
+				<td class="sticky left-0 z-10 bg-white p-3 text-right whitespace-nowrap">
 					{data.id}
 				</td>
 				<td class="p-3 whitespace-nowrap">
@@ -150,18 +150,22 @@
 				</td>
 				<td class="p-3">
 					{#each data.redirectUris as uri}
-						<span class="mb-1 block px-2 bg-gray-100 rounded w-fit text-sm">{uri}</span>
+						<span class="mb-1 block w-fit rounded bg-gray-100 px-2 text-sm">{uri}</span>
 					{/each}
 				</td>
 				<td class="p-3">
 					{#each data.postLogoutRedirectUris as uri}
-						<span class="mb-1 block px-2 bg-gray-100 rounded w-fit text-sm">{uri}</span>
+						<span class="mb-1 block w-fit rounded bg-gray-100 px-2 text-sm">{uri}</span>
 					{/each}
 				</td>
 				<td class="p-3">
-					{#each data.permissions as permission}
-						<span class="flex gap-2 mb-1 px-2 bg-gray-100 rounded w-fit text-sm">{permission}</span>
-					{/each}
+					<div class="flex gap-2">
+						{#each data.permissions as permission}
+							<span class="mb-1 flex w-fit gap-2 rounded bg-gray-100 px-2 text-sm"
+								>{permission}</span
+							>
+						{/each}
+					</div>
 				</td>
 			{/snippet}
 		</Table>

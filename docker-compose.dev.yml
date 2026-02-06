@@ -17,11 +17,10 @@ services:
     volumes:
       - mssql-dev-data:/var/opt/mssql
       - ./Infrastructure/Data/quartzSchema.sql:/tmp/quartzSchema.sql
-      - ./Infrastructure/Data/init-db.sh:/tmp/init-db.sh
     networks:
       - es-dev-network
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Kioliki24 -C -Q "SELECT 1" || exit 1
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Kioliki24 -C -Q "SELECT 1" || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
@@ -29,7 +28,20 @@ services:
     entrypoint: |
       bash -c '
       /opt/mssql/bin/sqlservr &
-      bash /tmp/init-db.sh
+      echo "Waiting for SQL Server to start..."
+      for i in $(seq 1 30); do
+        if /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Kioliki24 -C -Q "SELECT 1" > /dev/null 2>&1; then
+          echo "SQL Server is ready!"
+          break
+        fi
+        echo "Attempt $$i: waiting 2s..."
+        sleep 2
+      done
+      echo "Creating QuartzJob database..."
+      /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Kioliki24 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '\''QuartzJob'\'') CREATE DATABASE QuartzJob;"
+      echo "Running Quartz schema..."
+      sed "s/\[enter_db_name_here\]/QuartzJob/g" /tmp/quartzSchema.sql | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Kioliki24 -C -d QuartzJob
+      echo "Quartz database initialized successfully"
       wait
       '
 
