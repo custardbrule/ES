@@ -6,7 +6,10 @@
 	let {
 		currentPage = 1,
 		totalPage = 1,
-		onPageChange
+		pageSize = 10,
+		pageSizeOptions = [10, 25, 50, 100],
+		onPageChange,
+		onPageSizeChange
 	}: PagingProps = $props();
 
 	function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -58,53 +61,49 @@
 	}
 </script>
 
-{#if totalPage > 1}
-	<div class="flex items-center gap-1 border bg-white py-2 rounded-lg">
-		<!-- Previous -->
-		<button
-			type="button"
-			class="rounded text-sm transition-colors
-				{currentPage === 1
-				? 'cursor-not-allowed text-gray-300'
-				: 'text-gray-600 hover:bg-gray-100'}"
-			disabled={currentPage === 1}
-			onclick={() => goToPage(currentPage - 1)}
-		>
-			{@html PrevSvg}
-		</button>
+<div class="flex items-center gap-1 rounded-lg border bg-white py-2">
+	<!-- Previous -->
+	<button
+		type="button"
+		class="rounded text-sm transition-colors
+				{currentPage === 1 ? 'cursor-not-allowed text-gray-300' : 'text-gray-600 hover:bg-gray-100'}"
+		disabled={currentPage === 1}
+		onclick={() => goToPage(currentPage - 1)}
+	>
+		{@html PrevSvg}
+	</button>
 
-		<!-- Page numbers -->
-		{#each getPageNumbers(currentPage, totalPage) as page}
-			{#if page === '...'}
-				<span class="px-2 text-gray-400">...</span>
-			{:else}
-				<button
-					type="button"
-					class="min-w-8 rounded px-3 py-1 text-sm transition-colors
-						{page === currentPage
-						? 'bg-primary text-white'
-						: 'text-gray-600 hover:bg-gray-100'}"
-					onclick={() => goToPage(page)}
-				>
-					{page}
-				</button>
-			{/if}
-		{/each}
+	<!-- Page numbers -->
+	{#each getPageNumbers(currentPage, totalPage) as page}
+		{#if page === '...'}
+			<span class="px-2 text-gray-400">...</span>
+		{:else}
+			<button
+				type="button"
+				class="min-w-8 rounded px-3 py-1 text-sm transition-colors
+						{page === currentPage ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}"
+				onclick={() => goToPage(page)}
+			>
+				{page}
+			</button>
+		{/if}
+	{/each}
 
-		<!-- Next -->
-		<button
-			type="button"
-			class="rounded text-sm transition-colors
+	<!-- Next -->
+	<button
+		type="button"
+		class="rounded text-sm transition-colors
 				{currentPage === totalPage
-				? 'cursor-not-allowed text-gray-300'
-				: 'text-gray-600 hover:bg-gray-100'}"
-			disabled={currentPage === totalPage}
-			onclick={() => goToPage(currentPage + 1)}
-		>
-			{@html NextSvg}
-		</button>
+			? 'cursor-not-allowed text-gray-300'
+			: 'text-gray-600 hover:bg-gray-100'}"
+		disabled={currentPage === totalPage}
+		onclick={() => goToPage(currentPage + 1)}
+	>
+		{@html NextSvg}
+	</button>
 
-		<div class="flex gap-2 px-4 items-center">
+	<div class="flex h-full items-center gap-4 px-4">
+		<div class="flex items-center gap-2">
 			<span>page</span>
 			<Input
 				inputClass="max-w-[48px] px-0 text-center"
@@ -117,5 +116,17 @@
 			/>
 			<span>/ {totalPage}</span>
 		</div>
+		<span class="h-1/2 border-l"></span>
+		<div class="overflow-hidden rounded">
+			<select
+				value={pageSize}
+				onchange={(e) => onPageSizeChange?.(Number(e.currentTarget.value))}
+				class="rounded border border-gray-300 px-2 py-1 text-sm outline-none focus:border-primary focus:ring-0 focus:outline-none"
+			>
+				{#each pageSizeOptions as size}
+					<option value={size}>{size} / page</option>
+				{/each}
+			</select>
+		</div>
 	</div>
-{/if}
+</div>

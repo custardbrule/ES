@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { apiClient } from '$lib/server/api';
 import { JWT_COOKIE_NAME } from '$lib/server/constants';
+import type { CreateClientModel } from '$lib/types';
 import { fail } from '@sveltejs/kit';
-
 
 interface ClientsResponse {
 	data: Record<string, unknown>[];
@@ -14,9 +14,12 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 	const token = cookies.get(JWT_COOKIE_NAME);
 	const page = Number(url.searchParams.get('page')) || 1;
 
-	const columns = [
-		{ label: 'Name', key: 'name' },
-		{ label: 'Description', key: 'description' }
+	const columns: { label: string; key: keyof CreateClientModel }[] = [
+		{ label: 'Display Name', key: 'displayName' },
+		{ label: 'Client Type', key: 'clientType' },
+		{ label: 'Redirect URIs', key: 'redirectUris' },
+		{ label: 'Post Logout Redirect URIs', key: 'postLogoutRedirectUris' },
+		{ label: 'Permissions', key: 'permissions' }
 	];
 
 	try {
