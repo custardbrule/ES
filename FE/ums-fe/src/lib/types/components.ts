@@ -88,6 +88,7 @@ export interface InputProps extends HTMLInputAttributes {
 export interface PagingProps {
 	currentPage?: number;
 	totalPage?: number;
+	totalCount?: number;
 	pageSize?: number;
 	pageSizeOptions?: number[];
 	onPageChange?: (page: number) => void;

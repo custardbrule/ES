@@ -1,10 +1,11 @@
 using System.Collections.Immutable;
 using CQRS;
 using OpenIddict.Abstractions;
+using Utilities;
 
 namespace Infras.User.Services.Queries
 {
-    public sealed record GetAllApplicationsQuery() : IRequest<List<ApplicationDto>>;
+    public sealed record GetAllApplicationsQuery(int Page = 1, int PageSize = 10) : IRequest<PagedList<ApplicationDto>>;
 
     public sealed record ApplicationDto(
         string Id,
@@ -18,13 +19,18 @@ namespace Infras.User.Services.Queries
 
     internal sealed class GetAllApplicationsHandler(
         IOpenIddictApplicationManager applicationManager)
-        : IHandler<GetAllApplicationsQuery, List<ApplicationDto>>
+        : IHandler<GetAllApplicationsQuery, PagedList<ApplicationDto>>
     {
-        public async Task<List<ApplicationDto>> Handle(GetAllApplicationsQuery request, CancellationToken cancellationToken)
+        public async Task<PagedList<ApplicationDto>> Handle(GetAllApplicationsQuery request, CancellationToken cancellationToken)
         {
-            var applications = new List<ApplicationDto>();
+            var page = request.Page < 1 ? 1 : request.Page;
+            var pageSize = request.PageSize < 1 ? 10 : request.PageSize > 100 ? 100 : request.PageSize;
+            var offset = (page - 1) * pageSize;
 
-            await foreach (var app in applicationManager.ListAsync(cancellationToken: cancellationToken))
+            var totalCount = await applicationManager.CountAsync(cancellationToken);
+
+            var applications = new List<ApplicationDto>();
+            await foreach (var app in applicationManager.ListAsync(pageSize, offset, cancellationToken))
             {
                 applications.Add(new ApplicationDto(
                     Id: await applicationManager.GetIdAsync(app, cancellationToken) ?? string.Empty,
@@ -37,7 +43,7 @@ namespace Infras.User.Services.Queries
                 ));
             }
 
-            return applications;
+            return PagedList<ApplicationDto>.Create(applications, (int)totalCount, page, pageSize);
         }
     }
 }

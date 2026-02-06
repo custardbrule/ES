@@ -159,7 +159,7 @@
 					{/each}
 				</td>
 				<td class="p-3">
-					<div class="flex gap-2">
+					<div class="flex max-w-72 flex-wrap gap-2">
 						{#each data.permissions as permission}
 							<span class="mb-1 flex w-fit gap-2 rounded bg-gray-100 px-2 text-sm"
 								>{permission}</span

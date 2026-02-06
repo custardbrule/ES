@@ -36,23 +36,25 @@ namespace Utilities
         }
 
     }
-    public class PagedList<T> : List<T>
+    public class PagedList<T>
     {
-        private PagedList(IEnumerable<T> currentPage, int count, int pageNumber, int pageSize)
+        private PagedList(IEnumerable<T> items, int count, int pageNumber, int pageSize)
         {
+            Items = items.ToList();
             CurrentPage = pageNumber;
             PageSize = pageSize;
             TotalCount = count;
-            AddRange(currentPage);
         }
 
-        public readonly IReadOnlyList<int> AvailablePageSizes = [10, 25, 50, 100];
-        public int CurrentPage { get; set; }
-        public int PageSize { get; set; }
-        public int TotalCount { get; set; }
+        public IReadOnlyList<T> Items { get; }
+        public int CurrentPage { get; }
+        public int PageSize { get; }
+        public int TotalCount { get; }
         public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
         public bool IsPreviousPageExists => CurrentPage > 1;
         public bool IsNextPageExists => CurrentPage < TotalPages;
+
+        public static PagedList<T> Create(IEnumerable<T> items, int totalCount, int pageNumber, int pageSize) => new(items, totalCount, pageNumber, pageSize);
 
         public static async Task<PagedList<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize, CancellationToken ct = default)
         {
@@ -63,25 +65,25 @@ namespace Utilities
         }
     }
 
-    public class EPagedList<T> : List<T>
+    public class EPagedList<T>
     {
-        private EPagedList(IEnumerable<T> currentPage, long count, int pageNumber, int pageSize)
+        private EPagedList(IEnumerable<T> items, long count, int pageNumber, int pageSize)
         {
+            Items = items.ToList();
             CurrentPage = pageNumber;
             PageSize = pageSize;
             TotalCount = count;
-            AddRange(currentPage);
         }
 
-        public readonly IReadOnlyList<int> AvailablePageSizes = [10, 25, 50, 100];
-        public int CurrentPage { get; set; }
-        public int PageSize { get; set; }
-        public long TotalCount { get; set; }
+        public IReadOnlyList<T> Items { get; }
+        public int CurrentPage { get; }
+        public int PageSize { get; }
+        public long TotalCount { get; }
         public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
         public bool IsPreviousPageExists => CurrentPage > 1;
         public bool IsNextPageExists => CurrentPage < TotalPages;
 
-        public static EPagedList<T> Create(IEnumerable<T> items, long totalCount, int pageNumber, int pageSize) => new EPagedList<T>(items, (int)totalCount, pageNumber, pageSize);
+        public static EPagedList<T> Create(IEnumerable<T> items, long totalCount, int pageNumber, int pageSize) => new(items, totalCount, pageNumber, pageSize);
     }
 
     public static class Extensions

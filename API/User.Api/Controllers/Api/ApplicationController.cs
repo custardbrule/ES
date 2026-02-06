@@ -3,6 +3,7 @@ using Infras.User.Services.Commands;
 using Infras.User.Services.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Utilities;
 
 namespace User.Api.Controllers.Api
 {
@@ -20,10 +21,9 @@ namespace User.Api.Controllers.Api
 
         // GET: api/Application
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] GetAllApplicationsQuery query)
         {
-            var applications = await _publisher.Send<GetAllApplicationsQuery, List<ApplicationDto>>(
-                new GetAllApplicationsQuery());
+            var applications = await _publisher.Send<GetAllApplicationsQuery, PagedList<ApplicationDto>>(query);
 
             return Ok(applications);
         }
