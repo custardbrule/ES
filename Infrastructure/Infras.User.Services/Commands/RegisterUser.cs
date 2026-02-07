@@ -5,6 +5,7 @@ using Domain.User.UserRoot;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using RequestValidatior;
+using Seed;
 using Utilities;
 
 namespace Infras.User.Services.Commands
@@ -60,7 +61,7 @@ namespace Infras.User.Services.Commands
 
             if (existingUser != null)
             {
-                throw new InvalidOperationException("Account already exists");
+                throw new BussinessException("DUPLICATE_ACCOUNT", 409, "Account already exists");
             }
 
             // Get secret key from configuration

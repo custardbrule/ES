@@ -55,10 +55,10 @@ namespace Domain.User.UserRoot
         /// <param name="newPassword">New password to set</param>
         /// <param name="secretKey">Secret key for password hashing</param>
         /// <returns>A new User instance with updated password</returns>
-        /// <exception cref="InvalidOperationException">Thrown when current password is incorrect</exception>
+        /// <exception cref="BussinessException">Thrown when current password is incorrect</exception>
         public User ChangePassword(string currentPassword, string newPassword, string secretKey)
         {
-            if (!ValidatePassword(currentPassword, secretKey)) throw new InvalidOperationException("Current password is incorrect");
+            if (!ValidatePassword(currentPassword, secretKey)) throw new BussinessException("INVALID_PASSWORD", 400, "Current password is incorrect");
             return this with { Password = HashPassword(newPassword, secretKey) };
         }
 

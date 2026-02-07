@@ -53,6 +53,7 @@ export interface FormProps<T> extends Omit<HTMLFormAttributes, 'onsubmit'> {
 	validator?: ValidatorBuilder<T>;
 	validationResult?: ValidationResult<T>;
 	state?: FormState<T>;
+	disabled?: boolean;
 	onsubmit?: (model: T) => void | Promise<void>;
 	class?: string;
 	children?: Snippet;

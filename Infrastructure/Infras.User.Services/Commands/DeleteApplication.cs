@@ -1,5 +1,6 @@
 using CQRS;
 using OpenIddict.Abstractions;
+using Seed;
 
 namespace Infras.User.Services.Commands
 {
@@ -14,7 +15,7 @@ namespace Infras.User.Services.Commands
             var app = await applicationManager.FindByIdAsync(request.Id, cancellationToken);
             if (app == null)
             {
-                throw new InvalidOperationException("Application not found.");
+                throw new BussinessException("APP_NOT_FOUND", 404, "Application not found.");
             }
 
             await applicationManager.DeleteAsync(app, cancellationToken);

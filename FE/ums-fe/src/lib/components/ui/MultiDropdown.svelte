@@ -37,9 +37,7 @@
 		return value.some((v) => isEqual(v, optionValue));
 	}
 
-	const selectedLabels = $derived(
-		options.filter((o) => isSelected(o.value)).map((o) => o.label)
-	);
+	const selectedLabels = $derived(options.filter((o) => isSelected(o.value)).map((o) => o.label));
 
 	const filtered = $derived(
 		search ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase())) : options
@@ -144,9 +142,9 @@
 		onclick={toggle}
 		onkeydown={handleKeydown}
 		class="
-			flex w-full min-h-[38px] cursor-pointer items-center justify-between gap-1 rounded-md border px-2 py-1.5 text-sm transition-colors
+			flex min-h-[38px] w-full cursor-pointer items-center justify-between gap-1 rounded-md border px-2 py-1.5 text-sm transition-colors
 			focus:ring-1 focus:outline-none
-			{disabled ? 'cursor-not-allowed opacity-50' : ''}
+			{disabled ? 'opacity-50' : ''}
 			{open ? 'border-primary ring-1 ring-primary' : 'border-gray-300'}
 		"
 	>
@@ -157,20 +155,30 @@
 						class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-sm text-gray-700"
 					>
 						{label}
-						<button
-							type="button"
-							aria-label="Remove {label}"
-							class="text-gray-400 hover:text-gray-600"
-							onclick={(e) => { e.stopPropagation(); removeItem(i); }}
-						>
-							<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
+						{#if !disabled}
+							<button
+								type="button"
+								aria-label="Remove {label}"
+								class="text-gray-400 hover:text-gray-600"
+								onclick={(e) => {
+									e.stopPropagation();
+									removeItem(i);
+								}}
+							>
+								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+							</button>
+						{/if}
 					</span>
 				{/each}
 			{:else}
-				<span class="text-gray-400 px-1">{placeholder}</span>
+				<span class="px-1 text-gray-400">{placeholder}</span>
 			{/if}
 		</div>
 		<svg
@@ -220,7 +228,12 @@
 								viewBox="0 0 24 24"
 							>
 								{#if selected}
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M9 12l2 2 4-4"
+									/>
 									<rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2" />
 								{:else}
 									<rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2" />

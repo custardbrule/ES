@@ -2,6 +2,7 @@ using CQRS;
 using Data;
 using Domain.User.UserRoot;
 using Microsoft.EntityFrameworkCore;
+using Seed;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -27,7 +28,7 @@ namespace Infras.User.Services.Commands
             var user = await context.Users
                 .Include(u => u.RecoveryCodes)
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
-                ?? throw new InvalidOperationException("User not found");
+                ?? throw new BussinessException("USER_NOT_FOUND", 404, "User not found");
 
             // Remove all existing unused recovery codes
             var existingCodes = user.RecoveryCodes.Where(rc => !rc.IsUsed).ToList();

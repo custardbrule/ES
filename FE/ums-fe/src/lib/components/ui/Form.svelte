@@ -12,6 +12,7 @@
 		validator,
 		validationResult = $bindable() as ValidationResult<T>,
 		state = $bindable({ touched: {}, submitted: false }) as FormState<T>,
+		disabled = false,
 		onsubmit,
 		class: className = '',
 		children
@@ -71,7 +72,7 @@
 					}}
 					options={field.options}
 					placeholder={field.placeholder}
-					disabled={field.disabled}
+					disabled={disabled || field.disabled}
 				/>
 			{:else if field.type === 'textarea'}
 				<textarea
@@ -80,7 +81,7 @@
 					oninput={(e) => updateField(field, e.currentTarget.value)}
 					onblur={() => handleBlur(field.name)}
 					placeholder={field.placeholder}
-					disabled={field.disabled}
+					disabled={disabled || field.disabled}
 					class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				></textarea>
 			{:else if field.type === 'checkbox'}
@@ -90,7 +91,7 @@
 					checked={getFieldValue(field) as boolean}
 					onchange={(e) => updateField(field, e.currentTarget.checked)}
 					onblur={() => handleBlur(field.name)}
-					disabled={field.disabled}
+					disabled={disabled || field.disabled}
 					class="h-4 w-4"
 				/>
 			{:else if field.type === 'multiselect' && field.options}
@@ -103,7 +104,7 @@
 					}}
 					options={field.options}
 					placeholder={field.placeholder}
-					disabled={field.disabled}
+					disabled={disabled || field.disabled}
 				/>
 			{:else if field.type === 'array'}
 				<ArrayInput
@@ -114,7 +115,7 @@
 						handleBlur(field.name);
 					}}
 					placeholder={field.placeholder}
-					disabled={field.disabled}
+					disabled={disabled || field.disabled}
 				/>
 			{:else}
 				<Input
@@ -124,7 +125,7 @@
 					oninput={(e) => updateField(field, e.currentTarget.value)}
 					onblur={() => handleBlur(field.name)}
 					placeholder={field.placeholder}
-					disabled={field.disabled}
+					disabled={disabled || field.disabled}
 				/>
 			{/if}
 

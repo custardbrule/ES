@@ -42,9 +42,9 @@ namespace User.Api.Controllers.Api
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateApplicationCommand request)
         {
-            var id = await _publisher.Send<CreateApplicationCommand, string>(request);
+            var result = await _publisher.Send<CreateApplicationCommand, CreateApplicationResult>(request);
 
-            return CreatedAtAction(nameof(GetById), new { id }, new { id });
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         // PUT: api/Application/{id}

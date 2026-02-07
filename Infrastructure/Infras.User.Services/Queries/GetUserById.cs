@@ -1,5 +1,6 @@
 using CQRS;
 using Microsoft.EntityFrameworkCore;
+using Seed;
 
 namespace Infras.User.Services.Queries
 {
@@ -15,7 +16,7 @@ namespace Infras.User.Services.Queries
             var user = await context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
 
             if (user == null)
-                throw new InvalidOperationException($"User with ID {request.UserId} not found.");
+                throw new BussinessException("USER_NOT_FOUND", 404, $"User with ID {request.UserId} not found.");
 
             return user;
         }

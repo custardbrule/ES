@@ -4,6 +4,7 @@
 	import type { ClientViewModel, CreateClientModel, FormField, FormState } from '$lib/types';
 	import type { ValidationResult } from '$lib/validator';
 	import { ValidatorBuilder, rules } from '$lib/validator';
+	import { BackSvg } from '$lib/assets/icons';
 
 	let { data } = $props();
 
@@ -130,97 +131,46 @@
 </script>
 
 {#if client}
-	<div class="flex h-full w-full flex-col gap-6 p-4 text-primary-text">
-		<!-- Header -->
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-3">
-				<Button variant="ghost" onclick={() => goto('/client')}>
-					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M15 18l-6-6 6-6"
-						/>
-					</svg>
-				</Button>
-				<div>
-					<h1 class="text-2xl font-semibold">{client.displayName}</h1>
-					<p class="text-sm text-gray-500">{client.clientId}</p>
+	<div class="flex h-full w-full">
+		<div class="flex h-full w-full flex-col gap-6 p-4 text-primary-text md:w-1/2 lg:w-1/3">
+			<!-- Header -->
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<a href="/client" class="rounded-md p-2 text-black hover:bg-gray-500">
+						{@html BackSvg}
+					</a>
+					<div>
+						<h1 class="text-2xl font-semibold">{client.displayName}</h1>
+						<p class="text-sm text-gray-500">{client.clientId}</p>
+					</div>
+				</div>
+				<div class="flex gap-2">
+					{#if editing}
+						<Button variant="ghost" onclick={cancelEdit} disabled={loading}>Cancel</Button>
+						<Button
+							variant="secondary"
+							{loading}
+							disabled={!validationResult?.isValid}
+							onclick={() => handleUpdate(formModel)}>Save</Button
+						>
+					{:else}
+						<Button variant="outline" onclick={() => (editing = true)}>Edit</Button>
+						<Button variant="danger" onclick={() => deleteDialogRef?.showModal()}>Delete</Button>
+					{/if}
 				</div>
 			</div>
-			<div class="flex gap-2">
-				{#if editing}
-					<Button variant="ghost" onclick={cancelEdit} disabled={loading}>Cancel</Button>
-					<Button
-						{loading}
-						disabled={!validationResult?.isValid}
-						onclick={() => handleUpdate(formModel)}>Save</Button
-					>
-				{:else}
-					<Button variant="outline" onclick={() => (editing = true)}>Edit</Button>
-					<Button variant="danger" onclick={() => deleteDialogRef?.showModal()}>Delete</Button>
-				{/if}
-			</div>
+
+			<!-- Content -->
+			<Form
+				disabled={!editing}
+				bind:model={formModel}
+				bind:validationResult
+				bind:state={formState}
+				{validator}
+				{fields}
+				onsubmit={handleUpdate}
+			/>
 		</div>
-
-		<!-- Content -->
-		{#if editing}
-			<div class="max-w-2xl">
-				<Form
-					bind:model={formModel}
-					bind:validationResult
-					bind:state={formState}
-					{validator}
-					{fields}
-					onsubmit={handleUpdate}
-				/>
-			</div>
-		{:else}
-			<div class="grid max-w-2xl gap-6">
-				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<span class="text-sm font-medium text-gray-500">Display Name</span>
-						<p>{client.displayName}</p>
-					</div>
-					<div>
-						<span class="text-sm font-medium text-gray-500">Client Type</span>
-						<p class="capitalize">{client.clientType}</p>
-					</div>
-					<div>
-						<span class="text-sm font-medium text-gray-500">Client ID</span>
-						<p class="font-mono text-sm">{client.clientId}</p>
-					</div>
-				</div>
-
-				<div>
-					<span class="text-sm font-medium text-gray-500">Redirect URIs</span>
-					<div class="mt-1 flex flex-col gap-1">
-						{#each client.redirectUris as uri}
-							<span class="w-fit rounded bg-gray-100 px-2 py-0.5 text-sm">{uri}</span>
-						{/each}
-					</div>
-				</div>
-
-				<div>
-					<span class="text-sm font-medium text-gray-500">Post Logout Redirect URIs</span>
-					<div class="mt-1 flex flex-col gap-1">
-						{#each client.postLogoutRedirectUris as uri}
-							<span class="w-fit rounded bg-gray-100 px-2 py-0.5 text-sm">{uri}</span>
-						{/each}
-					</div>
-				</div>
-
-				<div>
-					<span class="text-sm font-medium text-gray-500">Permissions</span>
-					<div class="mt-1 flex flex-wrap gap-2">
-						{#each client.permissions as permission}
-							<span class="rounded bg-gray-100 px-2 py-0.5 text-sm">{permission}</span>
-						{/each}
-					</div>
-				</div>
-			</div>
-		{/if}
 	</div>
 {:else}
 	<div class="flex h-full items-center justify-center text-gray-500">

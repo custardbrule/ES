@@ -14,6 +14,7 @@
 		placeholder = '',
 		inputClass = '',
 		type = 'text',
+		disabled = false,
 		onchange,
 		...rest
 	}: Props = $props();
@@ -49,38 +50,44 @@
 
 <div class="flex flex-col gap-2">
 	<div
-		class="flex flex-wrap items-center gap-1 rounded-md border border-gray-300 px-2 py-1.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary {inputClass}"
+		class="flex flex-wrap items-center gap-1 rounded-md border border-gray-300 px-2 py-1.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary {disabled
+			? 'opacity-50'
+			: ''} {inputClass}"
 	>
 		{#each value as item, index}
 			<span
 				class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-sm text-gray-700"
 			>
 				{item}
-				<button
-					type="button"
-					aria-label="Remove item"
-					class="text-gray-400 hover:text-gray-600"
-					onclick={() => removeItem(index)}
-				>
-					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						/>
-					</svg>
-				</button>
+				{#if !disabled}
+					<button
+						type="button"
+						aria-label="Remove item"
+						class="text-gray-400 hover:text-gray-600"
+						onclick={() => removeItem(index)}
+					>
+						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				{/if}
 			</span>
 		{/each}
-		<input
-			{id}
-			{...rest}
-			{type}
-			bind:value={inputValue}
-			onkeydown={handleKeydown}
-			{placeholder}
-			class="min-w-20 flex-1 border-none bg-transparent text-sm outline-none"
-		/>
+		{#if !disabled}
+			<input
+				{id}
+				{...rest}
+				{type}
+				bind:value={inputValue}
+				onkeydown={handleKeydown}
+				{placeholder}
+				class="min-w-20 flex-1 border-none bg-transparent text-sm outline-none"
+			/>
+		{/if}
 	</div>
 </div>

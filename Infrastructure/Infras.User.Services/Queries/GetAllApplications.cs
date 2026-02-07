@@ -12,6 +12,7 @@ namespace Infras.User.Services.Queries
         string ClientId,
         string DisplayName,
         string ClientType,
+        string ConsentType,
         ImmutableArray<string> RedirectUris,
         ImmutableArray<string> PostLogoutRedirectUris,
         ImmutableArray<string> Permissions
@@ -37,6 +38,7 @@ namespace Infras.User.Services.Queries
                     ClientId: await applicationManager.GetClientIdAsync(app, cancellationToken) ?? string.Empty,
                     DisplayName: await applicationManager.GetDisplayNameAsync(app, cancellationToken) ?? string.Empty,
                     ClientType: await applicationManager.GetClientTypeAsync(app, cancellationToken) ?? string.Empty,
+                    ConsentType: await applicationManager.GetConsentTypeAsync(app, cancellationToken) ?? string.Empty,
                     RedirectUris: await applicationManager.GetRedirectUrisAsync(app, cancellationToken),
                     PostLogoutRedirectUris: await applicationManager.GetPostLogoutRedirectUrisAsync(app, cancellationToken),
                     Permissions: await applicationManager.GetPermissionsAsync(app, cancellationToken)

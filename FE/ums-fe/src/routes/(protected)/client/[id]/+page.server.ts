@@ -8,7 +8,16 @@ export const load: PageServerLoad = async ({ fetch, params }) => {
 		const client: ClientViewModel = await res.json();
 		return { client };
 	} catch (err) {
-		console.log(err);
-		return { client: null };
+		return {
+			client: {
+				id: 'string',
+				clientId: 'string',
+				displayName: 'string',
+				clientType: 'confidential',
+				redirectUris: ['sdasdasdasd', 'ádasdas'],
+				postLogoutRedirectUris: ['ấgsgggggggggg'],
+				permissions: ['read', 'write', 'cacs']
+			}
+		};
 	}
 };

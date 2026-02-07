@@ -1,5 +1,6 @@
 using CQRS;
 using OpenIddict.Abstractions;
+using Seed;
 
 namespace Infras.User.Services.Commands
 {
@@ -19,7 +20,7 @@ namespace Infras.User.Services.Commands
             // Check if scope already exists
             if (await scopeManager.FindByNameAsync(request.Name, cancellationToken) != null)
             {
-                throw new InvalidOperationException("A scope with this name already exists.");
+                throw new BussinessException("DUPLICATE_SCOPE", 409, "A scope with this name already exists.");
             }
 
             var descriptor = new OpenIddictScopeDescriptor
@@ -41,7 +42,7 @@ namespace Infras.User.Services.Commands
             var scope = await scopeManager.CreateAsync(descriptor, cancellationToken);
             var id = await scopeManager.GetIdAsync(scope, cancellationToken);
 
-            return id ?? throw new InvalidOperationException("Failed to create scope.");
+            return id ?? throw new BussinessException("CREATE_FAILED", 500, "Failed to create scope.");
         }
     }
 }

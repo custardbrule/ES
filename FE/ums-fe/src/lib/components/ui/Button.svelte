@@ -15,7 +15,8 @@
 	const variants: Record<ButtonVariant, string> = {
 		primary: 'bg-primary text-white hover:opacity-90 active:opacity-80',
 		secondary: 'bg-secondary-bg text-secondary-text hover:opacity-90 active:opacity-80',
-		outline: 'border border-primary bg-transparent text-primary hover:bg-primary-bg active:opacity-80',
+		outline:
+			'border border-primary bg-transparent text-secondary hover:bg-secondary-bg hover:text-primary active:opacity-80',
 		ghost: 'bg-transparent text-primary hover:bg-gray-300 active:opacity-80',
 		danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800'
 	};

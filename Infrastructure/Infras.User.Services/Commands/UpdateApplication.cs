@@ -1,5 +1,6 @@
 using CQRS;
 using OpenIddict.Abstractions;
+using Seed;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Infras.User.Services.Commands
@@ -29,7 +30,7 @@ namespace Infras.User.Services.Commands
             var app = await applicationManager.FindByIdAsync(request.Id, cancellationToken);
             if (app == null)
             {
-                throw new InvalidOperationException("Application not found.");
+                throw new BussinessException("APP_NOT_FOUND", 404, "Application not found.");
             }
 
             var descriptor = new OpenIddictApplicationDescriptor

@@ -1,6 +1,7 @@
-using RequestValidatior;
 using System.Net;
 using System.Text.Json;
+using RequestValidatior;
+using Seed;
 
 namespace User.Api.Middleware
 {
@@ -29,49 +30,49 @@ namespace User.Api.Middleware
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            _logger.LogError(exception, "An unhandled exception occurred");
-
             context.Response.ContentType = "application/json";
 
-            var (statusCode, message, errors) = exception switch
+            var jsonOptions = new JsonSerializerOptions
             {
-                ValidationError validationError => (
-                    HttpStatusCode.BadRequest,
-                    "Validation failed",
-                    validationError.Errors
-                ),
-                InvalidOperationException invalidOpEx => (
-                    HttpStatusCode.NotFound,
-                    invalidOpEx.Message,
-                    null
-                ),
-                UnauthorizedAccessException => (
-                    HttpStatusCode.Unauthorized,
-                    "Unauthorized access",
-                    null
-                ),
-                _ => (
-                    HttpStatusCode.InternalServerError,
-                    "An internal server error occurred",
-                    null
-                )
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
             };
 
-            context.Response.StatusCode = (int)statusCode;
-
-            var response = new
+            switch (exception)
             {
-                statusCode = (int)statusCode,
-                message,
-                errors
-            };
+                case ValidationError validationError:
+                    context.Response.StatusCode = validationError.Status;
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(validationError, jsonOptions));
+                    break;
 
-            var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+                case BussinessException bussinessEx:
+                    context.Response.StatusCode = bussinessEx.HttpCode;
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        statusCode = bussinessEx.HttpCode,
+                        message = bussinessEx.Message
+                    }, jsonOptions));
+                    break;
 
-            await context.Response.WriteAsync(jsonResponse);
+                case UnauthorizedAccessException:
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        statusCode = (int)HttpStatusCode.Unauthorized,
+                        message = "Unauthorized access"
+                    }, jsonOptions));
+                    break;
+
+                default:
+                    _logger.LogError(exception, "An unhandled exception occurred");
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        statusCode = (int)HttpStatusCode.InternalServerError,
+                        message = "An internal server error occurred"
+                    }, jsonOptions));
+                    break;
+            }
         }
     }
 

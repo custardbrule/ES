@@ -1,5 +1,6 @@
 using CQRS;
 using OpenIddict.Abstractions;
+using Seed;
 
 namespace Infras.User.Services.Queries
 {
@@ -22,7 +23,7 @@ namespace Infras.User.Services.Queries
             var scope = await scopeManager.FindByIdAsync(request.Id, cancellationToken);
             if (scope == null)
             {
-                throw new InvalidOperationException("Scope not found.");
+                throw new BussinessException("SCOPE_NOT_FOUND", 404, "Scope not found.");
             }
 
             return new ScopeDetailsDto(

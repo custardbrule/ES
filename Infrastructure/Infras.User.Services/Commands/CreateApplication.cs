@@ -1,103 +1,95 @@
+using System.Security.Cryptography;
 using CQRS;
 using OpenIddict.Abstractions;
+using RequestValidatior;
+using Seed;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Infras.User.Services.Commands
 {
     public sealed record CreateApplicationCommand(
         string ClientId,
-        string ClientSecret,
         string DisplayName,
-        string? Type,
+        string? ClientType,
         List<string>? RedirectUris,
-        List<string>? PostLogoutRedirectUris,
-        bool AllowRefreshToken,
-        bool RequirePkce,
-        bool AllowOpenId,
-        bool AllowEmail,
-        bool AllowProfile,
-        bool AllowRoles
-    ) : IRequest<string>;
+        List<string>? PostLogoutRedirectUris
+    ) : IRequest<CreateApplicationResult>;
+
+    public sealed record CreateApplicationResult(string Id, string? ClientSecret);
+
+    public sealed class CreateApplicationCommandValidator : BaseValidator<CreateApplicationCommand>
+    {
+        private readonly HashSet<string> ValidClientTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ClientTypes.Public,
+            ClientTypes.Confidential
+        };
+
+        public CreateApplicationCommandValidator()
+        {
+            RuleFor(x => x.ClientType)
+                .With(type => type == null || ValidClientTypes.Contains(type), "ClientType must be 'public' or 'confidential'");
+
+            RuleFor(x => x.RedirectUris)
+                .With(uris => uris == null || uris.All(u => IsValidAbsoluteUri(u)), "RedirectUris must be valid absolute URIs");
+
+            RuleFor(x => x.PostLogoutRedirectUris)
+                .With(uris => uris == null || uris.All(u => IsValidAbsoluteUri(u)), "PostLogoutRedirectUris must be valid absolute URIs");
+        }
+
+        private bool IsValidAbsoluteUri(string uri) => Uri.TryCreate(uri, UriKind.Absolute, out _);
+    }
 
     internal sealed class CreateApplicationHandler(
         IOpenIddictApplicationManager applicationManager)
-        : IHandler<CreateApplicationCommand, string>
+        : IHandler<CreateApplicationCommand, CreateApplicationResult>
     {
-        public async Task<string> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
+        public async Task<CreateApplicationResult> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
         {
-            // Check if client already exists
             if (await applicationManager.FindByClientIdAsync(request.ClientId, cancellationToken) != null)
             {
-                throw new InvalidOperationException("A client with this ID already exists.");
+                throw new BussinessException("DUPLICATE_CLIENT", 409, "A client with this ID already exists.");
             }
+
+            var isConfidential = string.Equals(request.ClientType, ClientTypes.Confidential, StringComparison.OrdinalIgnoreCase);
 
             var descriptor = new OpenIddictApplicationDescriptor
             {
                 ClientId = request.ClientId,
-                ClientSecret = request.ClientSecret,
                 DisplayName = request.DisplayName,
-                ClientType = request.Type ?? ClientTypes.Confidential
+                ClientType = isConfidential ? ClientTypes.Confidential : ClientTypes.Public
             };
 
-            // Add redirect URIs
+            string? plainSecret = null;
+            if (isConfidential)
+            {
+                plainSecret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+                descriptor.ClientSecret = plainSecret;
+            }
+
             if (request.RedirectUris != null)
-            {
-                foreach (var uri in request.RedirectUris)
-                {
-                    descriptor.RedirectUris.Add(new Uri(uri));
-                }
-            }
+                descriptor.RedirectUris.UnionWith(request.RedirectUris.Select(uri => new Uri(uri)));
 
-            // Add post logout redirect URIs
             if (request.PostLogoutRedirectUris != null)
-            {
-                foreach (var uri in request.PostLogoutRedirectUris)
-                {
-                    descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
-                }
-            }
+                descriptor.PostLogoutRedirectUris.UnionWith(request.PostLogoutRedirectUris.Select(uri => new Uri(uri)));
 
-            // Add permissions
+            // Default OIDC permissions
             descriptor.Permissions.Add(Permissions.Endpoints.Authorization);
             descriptor.Permissions.Add(Permissions.Endpoints.Token);
+            descriptor.Permissions.Add(Permissions.Endpoints.Logout);
             descriptor.Permissions.Add(Permissions.GrantTypes.AuthorizationCode);
+            descriptor.Permissions.Add(Permissions.GrantTypes.RefreshToken);
             descriptor.Permissions.Add(Permissions.ResponseTypes.Code);
-
-            if (request.AllowRefreshToken)
-            {
-                descriptor.Permissions.Add(Permissions.GrantTypes.RefreshToken);
-            }
-
-            if (request.RequirePkce)
-            {
-                descriptor.Permissions.Add(Requirements.Features.ProofKeyForCodeExchange);
-            }
-
-            // Add scopes
-            if (request.AllowOpenId)
-            {
-                descriptor.Permissions.Add($"{Permissions.Prefixes.Scope}{Scopes.OpenId}");
-            }
-
-            if (request.AllowEmail)
-            {
-                descriptor.Permissions.Add(Permissions.Scopes.Email);
-            }
-
-            if (request.AllowProfile)
-            {
-                descriptor.Permissions.Add(Permissions.Scopes.Profile);
-            }
-
-            if (request.AllowRoles)
-            {
-                descriptor.Permissions.Add(Permissions.Scopes.Roles);
-            }
+            descriptor.Permissions.Add(Permissions.Scopes.Email);
+            descriptor.Permissions.Add(Permissions.Scopes.Profile);
+            descriptor.Permissions.Add(Permissions.Scopes.Roles);
+            descriptor.Permissions.Add($"{Permissions.Prefixes.Scope}{Scopes.OpenId}");
 
             var app = await applicationManager.CreateAsync(descriptor, cancellationToken);
-            var id = await applicationManager.GetIdAsync(app, cancellationToken);
+            var id = await applicationManager.GetIdAsync(app, cancellationToken)
+                ?? throw new BussinessException("CREATE_FAILED", 500, "Failed to create application.");
 
-            return id ?? throw new InvalidOperationException("Failed to create application.");
+            return new CreateApplicationResult(id, plainSecret);
         }
     }
 }
