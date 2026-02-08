@@ -24,12 +24,7 @@ namespace Infras.User.Services.Queries
     {
         public async Task<ApplicationDetailsDto> Handle(GetApplicationByIdQuery request, CancellationToken cancellationToken)
         {
-            var app = await applicationManager.FindByIdAsync(request.Id, cancellationToken);
-            if (app == null)
-            {
-                throw new BussinessException("APP_NOT_FOUND", 404, "Application not found.");
-            }
-
+            var app = await applicationManager.FindByIdAsync(request.Id, cancellationToken) ?? throw new BussinessException("APP_NOT_FOUND", 404, "Application not found.");
             return new ApplicationDetailsDto(
                 Id: await applicationManager.GetIdAsync(app, cancellationToken) ?? string.Empty,
                 ClientId: await applicationManager.GetClientIdAsync(app, cancellationToken) ?? string.Empty,

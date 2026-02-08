@@ -50,7 +50,7 @@
 
 <div class="flex flex-col gap-2">
 	<div
-		class="flex flex-wrap items-center gap-1 rounded-md border border-gray-300 px-2 py-1.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary {disabled
+		class="flex flex-wrap items-center gap-1 rounded-md border border-gray-300 px-2 py-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-gray-300 {disabled
 			? 'opacity-50'
 			: ''} {inputClass}"
 	>

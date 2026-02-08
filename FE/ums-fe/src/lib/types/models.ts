@@ -12,4 +12,12 @@ export interface ClientViewModel {
 	permissions: string[];
 }
 
-export interface CreateClientModel extends Omit<ClientViewModel, 'id' | 'clientId'> {}
+export interface CreateClientModel extends Omit<
+	ClientViewModel,
+	'id' | 'clientId' | 'permissions'
+> {}
+
+export interface UpdateClientModel extends Omit<
+	ClientViewModel,
+	'id' | 'clientId' | 'permissions'
+> {}

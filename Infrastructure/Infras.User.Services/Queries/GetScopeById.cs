@@ -20,12 +20,7 @@ namespace Infras.User.Services.Queries
     {
         public async Task<ScopeDetailsDto> Handle(GetScopeByIdQuery request, CancellationToken cancellationToken)
         {
-            var scope = await scopeManager.FindByIdAsync(request.Id, cancellationToken);
-            if (scope == null)
-            {
-                throw new BussinessException("SCOPE_NOT_FOUND", 404, "Scope not found.");
-            }
-
+            var scope = await scopeManager.FindByIdAsync(request.Id, cancellationToken) ?? throw new BussinessException("SCOPE_NOT_FOUND", 404, "Scope not found.");
             return new ScopeDetailsDto(
                 Id: await scopeManager.GetIdAsync(scope, cancellationToken) ?? string.Empty,
                 Name: await scopeManager.GetNameAsync(scope, cancellationToken) ?? string.Empty,

@@ -17,11 +17,7 @@ namespace Infras.User.Services.Queries
                 .Include(u => u.UserRoles)
                 .Include(u => u.Scopes)
                 .Include(u => u.LoginHistories)
-                .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
-
-            if (user == null)
-                throw new BussinessException("USER_NOT_FOUND", 404, $"User with ID {request.UserId} not found.");
-
+                .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken) ?? throw new BussinessException("USER_NOT_FOUND", 404, $"User with ID {request.UserId} not found.");
             return user;
         }
     }

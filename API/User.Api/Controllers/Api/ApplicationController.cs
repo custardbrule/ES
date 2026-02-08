@@ -49,11 +49,11 @@ namespace User.Api.Controllers.Api
 
         // PUT: api/Application/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] UpdateApplicationCommand request)
+        public async Task<IActionResult> Update(string id, [FromBody] UpdateApplicationBody body)
         {
-            await _publisher.Send<UpdateApplicationCommand, Unit>(request);
+            var result = await _publisher.Send<UpdateApplicationCommand, UpdateApplicationResult>(new UpdateApplicationCommand(id, body));
 
-            return NoContent();
+            return Ok(result);
         }
 
         // DELETE: api/Application/{id}

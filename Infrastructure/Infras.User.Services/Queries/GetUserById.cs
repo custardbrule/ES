@@ -13,11 +13,7 @@ namespace Infras.User.Services.Queries
         {
             await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-            var user = await context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
-
-            if (user == null)
-                throw new BussinessException("USER_NOT_FOUND", 404, $"User with ID {request.UserId} not found.");
-
+            var user = await context.Users.FindAsync(new object[] { request.UserId }, cancellationToken) ?? throw new BussinessException("USER_NOT_FOUND", 404, $"User with ID {request.UserId} not found.");
             return user;
         }
     }

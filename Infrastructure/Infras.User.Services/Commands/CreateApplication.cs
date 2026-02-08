@@ -7,6 +7,16 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Infras.User.Services.Commands
 {
+    /// <summary>
+    /// Creates a new OpenID Connect application with default OIDC permissions.
+    /// - Confidential clients: auto-generates a 256-bit client secret
+    /// - Public clients: enforces PKCE (Proof Key for Code Exchange)
+    /// </summary>
+    /// <param name="ClientId">Unique identifier for the client application</param>
+    /// <param name="DisplayName">Human-readable name for the application</param>
+    /// <param name="ClientType">Either 'public' or 'confidential' (defaults to 'public')</param>
+    /// <param name="RedirectUris">Allowed redirect URIs after authentication</param>
+    /// <param name="PostLogoutRedirectUris">Allowed redirect URIs after logout</param>
     public sealed record CreateApplicationCommand(
         string ClientId,
         string DisplayName,
@@ -15,6 +25,8 @@ namespace Infras.User.Services.Commands
         List<string>? PostLogoutRedirectUris
     ) : IRequest<CreateApplicationResult>;
 
+    /// <param name="Id">The generated application ID</param>
+    /// <param name="ClientSecret">The generated secret (only for confidential clients, null for public)</param>
     public sealed record CreateApplicationResult(string Id, string? ClientSecret);
 
     public sealed class CreateApplicationCommandValidator : BaseValidator<CreateApplicationCommand>
@@ -60,11 +72,17 @@ namespace Infras.User.Services.Commands
                 ClientType = isConfidential ? ClientTypes.Confidential : ClientTypes.Public
             };
 
+            // Confidential: generate a 256-bit secret for client_credentials / token exchange
+            // Public: require PKCE to protect the authorization code flow without a secret
             string? plainSecret = null;
             if (isConfidential)
             {
                 plainSecret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
                 descriptor.ClientSecret = plainSecret;
+            }
+            else
+            {
+                descriptor.Requirements.Add(Requirements.Features.ProofKeyForCodeExchange);
             }
 
             if (request.RedirectUris != null)
@@ -73,7 +91,11 @@ namespace Infras.User.Services.Commands
             if (request.PostLogoutRedirectUris != null)
                 descriptor.PostLogoutRedirectUris.UnionWith(request.PostLogoutRedirectUris.Select(uri => new Uri(uri)));
 
-            // Default OIDC permissions
+            // Default OIDC permissions:
+            // Endpoints  – authorize, token, logout
+            // Grants     – authorization_code + refresh_token
+            // Response   – code (for authorization code flow)
+            // Scopes     – openid, email, profile, roles
             descriptor.Permissions.Add(Permissions.Endpoints.Authorization);
             descriptor.Permissions.Add(Permissions.Endpoints.Token);
             descriptor.Permissions.Add(Permissions.Endpoints.Logout);

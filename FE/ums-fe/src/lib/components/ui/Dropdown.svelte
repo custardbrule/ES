@@ -128,9 +128,9 @@
 		onkeydown={handleKeydown}
 		class="
 			flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors
-			focus:ring-1 focus:outline-none
+			focus:ring-2 focus:outline-none
 			disabled:cursor-not-allowed disabled:opacity-50
-			{open ? 'border-primary ring-1 ring-primary' : 'border-gray-300'}
+			{open ? 'border-primary ring-1 ring-gray-300' : 'border-gray-300'}
 		"
 	>
 		<span class={selectedLabel ? '' : 'text-gray-400'}>

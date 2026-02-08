@@ -18,8 +18,7 @@
 		displayName: '',
 		clientType: 'confidential',
 		redirectUris: [],
-		postLogoutRedirectUris: [],
-		permissions: []
+		postLogoutRedirectUris: []
 	});
 
 	let dialogRef = $state<HTMLDialogElement>();
@@ -39,7 +38,6 @@
 		b.for('postLogoutRedirectUris')
 			.add(rules.required, 'At least one post logout redirect URI is required')
 			.add(rules.each(rules.url), 'All post logout redirect URIs must be valid URLs');
-		b.for('permissions').add(rules.required, 'Permissions are required');
 	});
 
 	const fields: FormField<CreateClientModel>[] = [
@@ -64,17 +62,6 @@
 			label: 'Post Logout Redirect URIs',
 			type: 'array',
 			placeholder: 'https://example.com/logout'
-		},
-		{
-			name: 'permissions',
-			label: 'Permissions',
-			type: 'multiselect',
-			placeholder: 'read, write',
-			options: [
-				{ label: 'Read', value: 'read' },
-				{ label: 'Write', value: 'write' },
-				{ label: 'Admin', value: 'admin' }
-			]
 		}
 	];
 

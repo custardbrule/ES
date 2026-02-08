@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Form, Modal } from '$lib/components';
-	import { goto, invalidateAll } from '$app/navigation';
-	import type { ClientViewModel, CreateClientModel, FormField, FormState } from '$lib/types';
+	import { goto, invalidate } from '$app/navigation';
+	import type { ClientViewModel, UpdateClientModel, FormField, FormState } from '$lib/types';
 	import type { ValidationResult } from '$lib/validator';
 	import { ValidatorBuilder, rules } from '$lib/validator';
 	import { BackSvg } from '$lib/assets/icons';
@@ -14,25 +14,24 @@
 	let deleteDialogRef = $state<HTMLDialogElement>();
 
 	// Edit form state
-	let formModel = $state<CreateClientModel>(toFormModel(null));
-	let validationResult = $state<ValidationResult<CreateClientModel>>();
-	let formState = $state<FormState<CreateClientModel>>({ touched: {}, submitted: false });
+	let formModel = $state<UpdateClientModel>(toFormModel(null));
+	let validationResult = $state<ValidationResult<UpdateClientModel>>();
+	let formState = $state<FormState<UpdateClientModel>>({ touched: {}, submitted: false });
 
 	$effect(() => {
 		formModel = toFormModel(client);
 	});
 
-	function toFormModel(c: ClientViewModel | null): CreateClientModel {
+	function toFormModel(c: ClientViewModel | null): UpdateClientModel {
 		return {
 			displayName: c?.displayName ?? '',
 			clientType: c?.clientType ?? 'confidential',
 			redirectUris: c?.redirectUris ?? [],
-			postLogoutRedirectUris: c?.postLogoutRedirectUris ?? [],
-			permissions: c?.permissions ?? []
+			postLogoutRedirectUris: c?.postLogoutRedirectUris ?? []
 		};
 	}
 
-	const validator = ValidatorBuilder.create<CreateClientModel>((b) => {
+	const validator = ValidatorBuilder.create<UpdateClientModel>((b) => {
 		b.for('displayName')
 			.add(rules.required, 'Display name is required')
 			.add(rules.minLength(3), 'Display name must be at least 3 characters')
@@ -43,10 +42,9 @@
 		b.for('postLogoutRedirectUris')
 			.add(rules.required, 'At least one post logout redirect URI is required')
 			.add(rules.each(rules.url), 'All post logout redirect URIs must be valid URLs');
-		b.for('permissions').add(rules.required, 'Permissions are required');
 	});
 
-	const fields: FormField<CreateClientModel>[] = [
+	const fields: FormField<UpdateClientModel>[] = [
 		{ name: 'displayName', label: 'Display Name', placeholder: 'My Application' },
 		{
 			name: 'clientType',
@@ -68,26 +66,15 @@
 			label: 'Post Logout Redirect URIs',
 			type: 'array',
 			placeholder: 'https://example.com/logout'
-		},
-		{
-			name: 'permissions',
-			label: 'Permissions',
-			type: 'multiselect',
-			placeholder: 'Select permissions',
-			options: [
-				{ label: 'Read', value: 'read' },
-				{ label: 'Write', value: 'write' },
-				{ label: 'Admin', value: 'admin' }
-			]
 		}
 	];
 
-	async function handleUpdate(form: CreateClientModel) {
+	async function handleUpdate(form: UpdateClientModel) {
 		if (!client) return;
 		loading = true;
 
 		try {
-			const res = await fetch(`/api/clients?id=${client.id}`, {
+			const res = await fetch(`/api/clients/${client.id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(form)
@@ -98,7 +85,7 @@
 				throw new Error(data.error || 'Failed to update client');
 			}
 
-			await invalidateAll();
+			await invalidate('app:client');
 			editing = false;
 		} catch (err) {
 			console.log(err);
@@ -112,7 +99,7 @@
 		loading = true;
 
 		try {
-			const res = await fetch(`/api/clients?id=${client.id}`, { method: 'DELETE' });
+			const res = await fetch(`/api/clients/${client.id}`, { method: 'DELETE' });
 			if (!res.ok) throw new Error('Failed to delete client');
 			goto('/client');
 		} catch (err) {
@@ -131,20 +118,34 @@
 </script>
 
 {#if client}
-	<div class="flex h-full w-full">
-		<div class="flex h-full w-full flex-col gap-6 p-4 text-primary-text md:w-1/2 lg:w-1/3">
-			<!-- Header -->
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<a href="/client" class="rounded-md p-2 text-black hover:bg-gray-500">
-						{@html BackSvg}
-					</a>
-					<div>
-						<h1 class="text-2xl font-semibold">{client.displayName}</h1>
-						<p class="text-sm text-gray-500">{client.clientId}</p>
-					</div>
+	<div class="flex h-full w-full flex-col p-4">
+		<!-- Header -->
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<a href="/client" class="rounded-md p-2 text-black hover:bg-gray-500">
+					{@html BackSvg}
+				</a>
+				<div>
+					<h1 class="text-3xl font-semibold text-primary-text">{client.displayName}</h1>
+					<p class="text-sm text-gray-500">{client.clientId}</p>
 				</div>
-				<div class="flex gap-2">
+			</div>
+			<Button variant="danger" onclick={() => deleteDialogRef?.showModal()}>Delete</Button>
+		</div>
+		<div class="flex w-full flex-1 flex-col gap-8 p-4 text-primary-text md:flex-row">
+			<!-- Content -->
+			<div class="flex flex-col gap-4 rounded-md border p-4">
+				<h2 class="text-xl font-semibold underline underline-offset-4">Client detail</h2>
+				<Form
+					disabled={!editing}
+					bind:model={formModel}
+					bind:validationResult
+					bind:state={formState}
+					{validator}
+					{fields}
+					onsubmit={handleUpdate}
+				/>
+				<div class="flex justify-end gap-2">
 					{#if editing}
 						<Button variant="ghost" onclick={cancelEdit} disabled={loading}>Cancel</Button>
 						<Button
@@ -154,22 +155,15 @@
 							onclick={() => handleUpdate(formModel)}>Save</Button
 						>
 					{:else}
-						<Button variant="outline" onclick={() => (editing = true)}>Edit</Button>
-						<Button variant="danger" onclick={() => deleteDialogRef?.showModal()}>Delete</Button>
+						<Button variant="secondary" onclick={() => (editing = true)}>Edit</Button>
 					{/if}
 				</div>
 			</div>
 
-			<!-- Content -->
-			<Form
-				disabled={!editing}
-				bind:model={formModel}
-				bind:validationResult
-				bind:state={formState}
-				{validator}
-				{fields}
-				onsubmit={handleUpdate}
-			/>
+			<!-- permission -->
+			<div class="flex flex-1 flex-col gap-4 rounded-md border p-4">
+				<h2 class="text-xl font-semibold underline underline-offset-4">Permission</h2>
+			</div>
 		</div>
 	</div>
 {:else}
