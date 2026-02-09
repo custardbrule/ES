@@ -128,4 +128,5 @@ export interface TableProps<T = Record<string, unknown>> {
 	header?: Snippet<[{ columns: TableColumn<T>[] }]>;
 	empty?: Snippet;
 	onPageChange?: (page: number) => void;
+	onRowClick?: (data: T, rowIndex: number) => void;
 }

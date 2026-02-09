@@ -4,11 +4,13 @@
 	import { BackSvg } from '$lib/assets/icons';
 	import ClientDetailSection from './ClientDetailSection.svelte';
 	import RolesSection from './RolesSection.svelte';
+	import ScopesSection from './ScopesSection.svelte';
 
 	let { data } = $props();
 
 	let client = $derived(data.client);
 	let roles = $derived(data.roles);
+	let scopes = $derived(data.scopes.map((s) => s.name));
 	let loading = $state(false);
 	let deleteDialogRef = $state<HTMLDialogElement>();
 
@@ -49,11 +51,9 @@
 			<ClientDetailSection {client} />
 
 			<div class="flex flex-1 flex-col gap-4 rounded-md border p-4">
-				<RolesSection clientId={client.id} {roles} />
+				<ScopesSection clientId={client.id} {scopes} />
 				<div class="w-full border-t"></div>
-				<div class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold underline underline-offset-4">Scopes</h2>
-				</div>
+				<RolesSection clientId={client.id} {roles} />
 			</div>
 		</div>
 	</div>

@@ -11,12 +11,13 @@
 		row,
 		header,
 		empty,
-		onPageChange
+		onPageChange,
+		onRowClick
 	}: TableProps<T> = $props();
 </script>
 
 {#snippet tableRow(data: T, rowIndex: number)}
-	<tr class="border-b hover:bg-gray-500">
+	<tr class="border-b hover:bg-gray-500 {onRowClick ? 'cursor-pointer' : ''}" onclick={() => onRowClick?.(data, rowIndex)}>
 		{#if row}
 			{@render row({ data, columns, rowIndex })}
 		{:else}

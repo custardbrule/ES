@@ -124,7 +124,11 @@
 				rowIndex: number;
 			})}
 				<td class="sticky left-0 z-10 bg-white p-3 text-right whitespace-nowrap">
-					{data.id}
+					<a
+						data-sveltekit-preload-data="tap"
+						href={`/client/${data.id}`}
+						class="underline-offset-2 hover:underline">{data.id}</a
+					>
 				</td>
 				<td class="p-3 whitespace-nowrap">
 					{data.clientId}

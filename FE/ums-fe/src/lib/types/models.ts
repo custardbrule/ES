@@ -28,7 +28,7 @@ export interface ClientDetailsViewModel {
 export interface ClientScopeViewModel {
 	id: string;
 	applicationId: string;
-	scopeId: string;
+	name: string;
 }
 
 export interface ClientRoleViewModel {
