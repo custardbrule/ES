@@ -1,18 +1,11 @@
 using CQRS;
+using Infras.User.Services.Dtos;
 using OpenIddict.Abstractions;
 using Seed;
 
 namespace Infras.User.Services.Queries
 {
     public sealed record GetScopeByIdQuery(string Id) : IRequest<ScopeDetailsDto>;
-
-    public sealed record ScopeDetailsDto(
-        string Id,
-        string Name,
-        string DisplayName,
-        string? Description,
-        List<string> Resources
-    );
 
     internal sealed class GetScopeByIdHandler(
         IOpenIddictScopeManager scopeManager)

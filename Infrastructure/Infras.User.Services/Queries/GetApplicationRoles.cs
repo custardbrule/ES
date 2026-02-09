@@ -1,11 +1,10 @@
 using CQRS;
+using Infras.User.Services.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infras.User.Services.Queries
 {
     public sealed record GetApplicationRolesQuery(string ApplicationId) : IRequest<List<ApplicationRoleDto>>;
-
-    public sealed record ApplicationRoleDto(Guid Id, string ApplicationId, string Name, string Description, List<string> Scopes);
 
     internal sealed class GetApplicationRolesHandler(
         IDbContextFactory<UserDbContext> contextFactory)

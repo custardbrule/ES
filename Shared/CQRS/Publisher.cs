@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CQRS
@@ -21,18 +16,17 @@ namespace CQRS
         {
             if (request is null) throw new ArgumentNullException(nameof(request));
 
-            // Get the handler for this request
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var token = cts.Token;
+
             var handler = GetHandler<TRequest, TResponse>();
-            // Get all pipeline behaviors for this request/response type
             var pipelines = GetPipelines<TRequest, TResponse>().ToArray();
 
-            await ExecutePrePipelines(pipelines, request, cancellationToken);
-            var response = await handler.Handle(request, cancellationToken);
-            await ExecutePostPipelines(pipelines, request, response, cancellationToken);
+            await ExecutePrePipelines(pipelines, request, token);
+            var response = await handler.Handle(request, token);
+            await ExecutePostPipelines(pipelines, request, response, token);
 
-            // Execute the pipeline
             return response;
-
         }
 
         public Task<Unit> Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest<Unit>
@@ -46,13 +40,6 @@ namespace CQRS
         private IEnumerable<IPipeline<TRequest, TResponse>> GetPipelines<TRequest, TResponse>() where TRequest : IRequest<TResponse>
             => _serviceProvider.GetServices<IPipeline<TRequest, TResponse>>();
 
-        private IPipeline<TRequest, TResponse> GetPipeline<TRequest, TResponse>() where TRequest : IRequest<TResponse>
-            => _serviceProvider.GetRequiredService<IPipeline<TRequest, TResponse>>();
-
-        /** 
-         * Pipeline but not run async so there will be some problem
-         * I will test and update later
-         */
         private async Task ExecutePrePipelines<TRequest, TResponse>(
             IPipeline<TRequest, TResponse>[] pipelines,
             TRequest request,
@@ -61,14 +48,11 @@ namespace CQRS
         {
             foreach (var pipeline in pipelines)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await pipeline.Pre(request, cancellationToken);
             }
         }
 
-        /** 
-         * Pipeline but not run async so there will be some problem
-         * I will test and update later
-         */
         private async Task ExecutePostPipelines<TRequest, TResponse>(
             IPipeline<TRequest, TResponse>[] pipelines,
             TRequest request,
@@ -78,6 +62,7 @@ namespace CQRS
         {
             foreach (var pipeline in pipelines)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await pipeline.Post(request, response, cancellationToken);
             }
         }

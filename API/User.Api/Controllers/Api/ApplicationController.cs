@@ -1,5 +1,6 @@
 using CQRS;
 using Infras.User.Services.Commands;
+using Infras.User.Services.Dtos;
 using Infras.User.Services.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -101,6 +102,36 @@ namespace User.Api.Controllers.Api
         {
             await _publisher.Send<DeleteApplicationRoleCommand, Unit>(
                 new DeleteApplicationRoleCommand(applicationId, roleId));
+
+            return NoContent();
+        }
+
+        // GET: api/Application/{applicationId}/scopes
+        [HttpGet("{applicationId}/scopes")]
+        public async Task<IActionResult> GetScopes(string applicationId)
+        {
+            var scopes = await _publisher.Send<GetApplicationScopesQuery, List<ApplicationScopeDto>>(
+                new GetApplicationScopesQuery(applicationId));
+
+            return Ok(scopes);
+        }
+
+        // POST: api/Application/{applicationId}/scopes
+        [HttpPost("{applicationId}/scopes")]
+        public async Task<IActionResult> CreateScope(string applicationId, [FromBody] CreateApplicationScopeCommand request)
+        {
+            var id = await _publisher.Send<CreateApplicationScopeCommand, Guid>(
+                new CreateApplicationScopeCommand(applicationId, request.ScopeId));
+
+            return Created($"api/Application/{applicationId}/scopes/{id}", new { id });
+        }
+
+        // DELETE: api/Application/{applicationId}/scopes/{scopeId}
+        [HttpDelete("{applicationId}/scopes/{scopeId}")]
+        public async Task<IActionResult> DeleteScope(string applicationId, Guid scopeId)
+        {
+            await _publisher.Send<DeleteApplicationScopeCommand, Unit>(
+                new DeleteApplicationScopeCommand(applicationId, scopeId));
 
             return NoContent();
         }

@@ -1,5 +1,6 @@
 using CQRS;
 using Infras.User.Services.Commands;
+using Infras.User.Services.Dtos;
 using Infras.User.Services.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

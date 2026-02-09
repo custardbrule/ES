@@ -1,22 +1,11 @@
-using System.Collections.Immutable;
 using CQRS;
+using Infras.User.Services.Dtos;
 using OpenIddict.Abstractions;
 using Utilities;
 
 namespace Infras.User.Services.Queries
 {
     public sealed record GetAllApplicationsQuery(int Page = 1, int PageSize = 10) : IRequest<PagedList<ApplicationDto>>;
-
-    public sealed record ApplicationDto(
-        string Id,
-        string ClientId,
-        string DisplayName,
-        string ClientType,
-        string ConsentType,
-        ImmutableArray<string> RedirectUris,
-        ImmutableArray<string> PostLogoutRedirectUris,
-        ImmutableArray<string> Permissions
-    );
 
     internal sealed class GetAllApplicationsHandler(
         IOpenIddictApplicationManager applicationManager)

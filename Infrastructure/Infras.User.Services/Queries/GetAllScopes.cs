@@ -1,17 +1,11 @@
 using CQRS;
+using Infras.User.Services.Dtos;
 using OpenIddict.Abstractions;
 using Utilities;
 
 namespace Infras.User.Services.Queries
 {
     public sealed record GetAllScopesQuery(int Page = 1, int PageSize = 10) : IRequest<PagedList<ScopeDto>>;
-
-    public sealed record ScopeDto(
-        string Id,
-        string Name,
-        string DisplayName,
-        string? Description
-    );
 
     internal sealed class GetAllScopesHandler(
         IOpenIddictScopeManager scopeManager)
