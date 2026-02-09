@@ -65,7 +65,7 @@
 	<!-- Previous -->
 	<button
 		type="button"
-		class="rounded text-sm transition-colors
+		class="h-8 w-8 rounded text-sm transition-colors
 				{currentPage === 1 ? 'cursor-not-allowed text-gray-300' : 'text-gray-600 hover:bg-gray-100'}"
 		disabled={currentPage === 1}
 		onclick={() => goToPage(currentPage - 1)}
@@ -92,7 +92,7 @@
 	<!-- Next -->
 	<button
 		type="button"
-		class="rounded text-sm transition-colors
+		class="h-8 w-8 rounded text-sm transition-colors
 				{currentPage === totalPage
 			? 'cursor-not-allowed text-gray-300'
 			: 'text-gray-600 hover:bg-gray-100'}"

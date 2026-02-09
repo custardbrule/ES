@@ -1,29 +1,32 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { ClientViewModel } from '$lib/types';
+import type { ClientDetailsViewModel } from '$lib/types';
 
 export const load: PageServerLoad = async ({ fetch, params, depends }) => {
 	depends('app:client');
-	try {
-		const res = await fetch(`/api/clients/${params.id}`);
-		if (!res.ok) throw new Error('Failed to fetch client');
-		const client: ClientViewModel = await res.json();
-		return { client };
-	} catch (err) {
+	const res = await fetch(`/api/clients/${params.id}`);
+
+	if (res.status === 404) {
+		redirect(302, '/client');
+	}
+
+	if (!res.ok) {
 		return {
 			client: {
-				id: 'string',
-				clientId: 'string',
-				displayName: 'string',
-				clientType: 'confidential',
-				redirectUris: [
-					'http://localhost:5173/client/09134a44-c14a-41da-b5a5-b6da96eaf3ba',
-					'http://localhost:5173/client/09134a44-c14a-41da-b5a5-b6da96eaf3ba'
-				],
-				postLogoutRedirectUris: [
-					'http://localhost:5173/client/09134a44-c14a-41da-b5a5-b6da96eaf3ba'
-				],
-				permissions: ['read', 'write', 'cacs']
-			}
+				id: '',
+				clientId: '',
+				displayName: '',
+				clientType: 'confidential' as const,
+				consentType: '',
+				redirectUris: [],
+				postLogoutRedirectUris: [],
+				permissions: []
+			},
+			roles: [],
+			scopes: []
 		};
 	}
+
+	const { roles, scopes, ...client }: ClientDetailsViewModel = await res.json();
+	return { client, roles, scopes };
 };

@@ -28,5 +28,5 @@ namespace Infras.User.Services.Dtos
 
     public sealed record ApplicationRoleDto(Guid Id, string ApplicationId, string Name, string Description, List<string> Scopes);
 
-    public sealed record ApplicationScopeDto(Guid Id, string ApplicationId, string ScopeId);
+    public sealed record ApplicationScopeDto(Guid Id, string ApplicationId, string Name);
 }

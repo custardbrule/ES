@@ -37,12 +37,9 @@ namespace Infras.User.Services.Commands
             context.Entry(role).Property(r => r.Description).CurrentValue = body.Description;
 
             // Replace scopes
-            role.ApplicationRoleScopes.Clear();
+            context.ApplicationRoleScopes.RemoveRange(role.ApplicationRoleScopes);
             if (body.Scopes != null)
-            {
-                foreach (var scope in body.Scopes)
-                    role.ApplicationRoleScopes.Add(new ApplicationRoleScope(Guid.NewGuid(), role.Id, scope));
-            }
+                context.ApplicationRoleScopes.AddRange(body.Scopes.Select(s => new ApplicationRoleScope(Guid.NewGuid(), role.Id, s)));
 
             await context.SaveChangesAsync(cancellationToken);
 

@@ -116,22 +116,12 @@ namespace User.Api.Controllers.Api
             return Ok(scopes);
         }
 
-        // POST: api/Application/{applicationId}/scopes
-        [HttpPost("{applicationId}/scopes")]
-        public async Task<IActionResult> CreateScope(string applicationId, [FromBody] CreateApplicationScopeCommand request)
+        // PUT: api/Application/{applicationId}/scopes
+        [HttpPut("{applicationId}/scopes")]
+        public async Task<IActionResult> ReplaceScopes(string applicationId, [FromBody] List<string> names)
         {
-            var id = await _publisher.Send<CreateApplicationScopeCommand, Guid>(
-                new CreateApplicationScopeCommand(applicationId, request.ScopeId));
-
-            return Created($"api/Application/{applicationId}/scopes/{id}", new { id });
-        }
-
-        // DELETE: api/Application/{applicationId}/scopes/{scopeId}
-        [HttpDelete("{applicationId}/scopes/{scopeId}")]
-        public async Task<IActionResult> DeleteScope(string applicationId, Guid scopeId)
-        {
-            await _publisher.Send<DeleteApplicationScopeCommand, Unit>(
-                new DeleteApplicationScopeCommand(applicationId, scopeId));
+            await _publisher.Send<ReplaceApplicationScopesCommand, Unit>(
+                new ReplaceApplicationScopesCommand(applicationId, names));
 
             return NoContent();
         }

@@ -9,17 +9,23 @@ export const required = (value: unknown): boolean => {
 	return true;
 };
 
-export const minLength = (min: number) => (value: string): boolean => {
-	return value.length >= min;
-};
+export const minLength =
+	(min: number) =>
+	(value: string): boolean => {
+		return value.length >= min;
+	};
 
-export const maxLength = (max: number) => (value: string): boolean => {
-	return value.length <= max;
-};
+export const maxLength =
+	(max: number) =>
+	(value: string): boolean => {
+		return value.length <= max;
+	};
 
-export const pattern = (regex: RegExp) => (value: string): boolean => {
-	return regex.test(value);
-};
+export const pattern =
+	(regex: RegExp) =>
+	(value: string): boolean => {
+		return regex.test(value);
+	};
 
 // ============================================
 // Format Validators
@@ -50,29 +56,39 @@ export const numeric = (value: string): boolean => {
 // Number Validators
 // ============================================
 
-export const min = (minVal: number) => (value: number): boolean => {
-	return value >= minVal;
-};
+export const min =
+	(minVal: number) =>
+	(value: number): boolean => {
+		return value >= minVal;
+	};
 
-export const max = (maxVal: number) => (value: number): boolean => {
-	return value <= maxVal;
-};
+export const max =
+	(maxVal: number) =>
+	(value: number): boolean => {
+		return value <= maxVal;
+	};
 
-export const between = (minVal: number, maxVal: number) => (value: number): boolean => {
-	return value >= minVal && value <= maxVal;
-};
+export const between =
+	(minVal: number, maxVal: number) =>
+	(value: number): boolean => {
+		return value >= minVal && value <= maxVal;
+	};
 
 // ============================================
 // Array Validators
 // ============================================
 
-export const minItems = (min: number) => (value: unknown[]): boolean => {
-	return value.length >= min;
-};
+export const minItems =
+	(min: number) =>
+	(value: unknown[]): boolean => {
+		return value.length >= min;
+	};
 
-export const maxItems = (max: number) => (value: unknown[]): boolean => {
-	return value.length <= max;
-};
+export const maxItems =
+	(max: number) =>
+	(value: unknown[]): boolean => {
+		return value.length <= max;
+	};
 
 export const unique = (value: unknown[]): boolean => {
 	return new Set(value).size === value.length;
@@ -88,10 +104,14 @@ export const each =
 // Comparison Validators
 // ============================================
 
-export const equals = <T>(expected: T) => (value: T): boolean => {
-	return value === expected;
-};
+export const equals =
+	<T>(expected: T) =>
+	(value: T): boolean => {
+		return value === expected;
+	};
 
-export const oneOf = <T>(options: T[]) => (value: T): boolean => {
-	return options.includes(value);
-};
+export const oneOf =
+	<T>(options: T[]) =>
+	(value: T): boolean => {
+		return options.includes(value);
+	};

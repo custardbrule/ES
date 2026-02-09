@@ -16,7 +16,7 @@ namespace Infras.User.Services.Queries
 
             return await context.ApplicationScopes
                 .Where(s => s.ApplicationId == request.ApplicationId)
-                .Select(s => new ApplicationScopeDto(s.Id, s.ApplicationId, s.ScopeId))
+                .Select(s => new ApplicationScopeDto(s.Id, s.ApplicationId, s.Name))
                 .ToListAsync(cancellationToken);
         }
     }
