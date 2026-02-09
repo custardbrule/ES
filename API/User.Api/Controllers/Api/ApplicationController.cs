@@ -64,5 +64,45 @@ namespace User.Api.Controllers.Api
 
             return NoContent();
         }
+
+        // GET: api/Application/{applicationId}/roles
+        [HttpGet("{applicationId}/roles")]
+        public async Task<IActionResult> GetRoles(string applicationId)
+        {
+            var roles = await _publisher.Send<GetApplicationRolesQuery, List<ApplicationRoleDto>>(
+                new GetApplicationRolesQuery(applicationId));
+
+            return Ok(roles);
+        }
+
+        // POST: api/Application/{applicationId}/roles
+        [HttpPost("{applicationId}/roles")]
+        public async Task<IActionResult> CreateRole(string applicationId, [FromBody] CreateApplicationRoleBody body)
+        {
+            var id = await _publisher.Send<CreateApplicationRoleCommand, Guid>(
+                new CreateApplicationRoleCommand(applicationId, body));
+
+            return Created($"api/Application/{applicationId}/roles/{id}", new { id });
+        }
+
+        // PUT: api/Application/{applicationId}/roles/{roleId}
+        [HttpPut("{applicationId}/roles/{roleId}")]
+        public async Task<IActionResult> UpdateRole(string applicationId, Guid roleId, [FromBody] UpdateApplicationRoleBody body)
+        {
+            await _publisher.Send<UpdateApplicationRoleCommand, Unit>(
+                new UpdateApplicationRoleCommand(applicationId, roleId, body));
+
+            return NoContent();
+        }
+
+        // DELETE: api/Application/{applicationId}/roles/{roleId}
+        [HttpDelete("{applicationId}/roles/{roleId}")]
+        public async Task<IActionResult> DeleteRole(string applicationId, Guid roleId)
+        {
+            await _publisher.Send<DeleteApplicationRoleCommand, Unit>(
+                new DeleteApplicationRoleCommand(applicationId, roleId));
+
+            return NoContent();
+        }
     }
 }

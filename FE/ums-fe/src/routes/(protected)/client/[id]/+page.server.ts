@@ -4,7 +4,7 @@ import type { ClientViewModel } from '$lib/types';
 export const load: PageServerLoad = async ({ fetch, params, depends }) => {
 	depends('app:client');
 	try {
-		const res = await fetch(`/api/clients?id=${params.id}`);
+		const res = await fetch(`/api/clients/${params.id}`);
 		if (!res.ok) throw new Error('Failed to fetch client');
 		const client: ClientViewModel = await res.json();
 		return { client };

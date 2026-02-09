@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Domain.User.UserRoot;
+using Domain.User.ApplicationRoot;
+using Domain.User.RoleRoot;
 
 namespace Infras.User.Services
 {
@@ -16,6 +18,9 @@ namespace Infras.User.Services
         public DbSet<RoleScope> RoleScopes { get; set; }
         public DbSet<LoginHistory> LoginHistories { get; set; }
         public DbSet<RecoveryCode> RecoveryCodes { get; set; }
+        public DbSet<ApplicationRole> ApplicationRoles { get; set; }
+        public DbSet<ApplicationRoleScope> ApplicationRoleScopes { get; set; }
+        public DbSet<ApplicationScope> ApplicationScopes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

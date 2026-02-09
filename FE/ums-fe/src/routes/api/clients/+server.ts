@@ -5,14 +5,8 @@ import { JWT_COOKIE_NAME } from '$lib/server/constants';
 
 export const GET: RequestHandler = async ({ cookies, url }) => {
 	const token = cookies.get(JWT_COOKIE_NAME);
-	const id = url.searchParams.get('id');
 
 	try {
-		if (id) {
-			const data = await apiClient(`/api/Application/${id}`, { token });
-			return json(data);
-		}
-
 		const page = url.searchParams.get('page') || '1';
 		const data = await apiClient(`/api/Application?page=${page}`, { token });
 		return json(data);

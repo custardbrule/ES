@@ -3,6 +3,7 @@ using Infras.User.Services.Commands;
 using Infras.User.Services.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Utilities;
 
 namespace User.Api.Controllers.Api
 {
@@ -20,10 +21,9 @@ namespace User.Api.Controllers.Api
 
         // GET: api/Scope
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] GetAllScopesQuery query)
         {
-            var scopes = await _publisher.Send<GetAllScopesQuery, List<ScopeDto>>(
-                new GetAllScopesQuery());
+            var scopes = await _publisher.Send<GetAllScopesQuery, PagedList<ScopeDto>>(query);
 
             return Ok(scopes);
         }
