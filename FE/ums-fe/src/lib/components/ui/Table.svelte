@@ -17,7 +17,10 @@
 </script>
 
 {#snippet tableRow(data: T, rowIndex: number)}
-	<tr class="border-b hover:bg-gray-500 {onRowClick ? 'cursor-pointer' : ''}" onclick={() => onRowClick?.(data, rowIndex)}>
+	<tr
+		class="border-b hover:bg-gray-500 {onRowClick ? 'cursor-pointer' : ''}"
+		onclick={() => onRowClick?.(data, rowIndex)}
+	>
 		{#if row}
 			{@render row({ data, columns, rowIndex })}
 		{:else}
@@ -44,7 +47,7 @@
 						{#each columns as column, colIndex (column.key)}
 							<th
 								class="bg-gray-100 p-3 text-left whitespace-nowrap
-									{colIndex === 0 ? 'sticky left-0 z-30 w-fit min-w-24 text-right' : ''}"
+									{colIndex === 0 ? 'sticky left-0 z-30 text-right' : ''}"
 							>
 								{column.label}
 							</th>

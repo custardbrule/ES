@@ -50,7 +50,7 @@
 		<div class="flex w-full flex-1 flex-col gap-8 p-4 text-primary-text md:flex-row">
 			<ClientDetailSection {client} />
 
-			<div class="flex flex-1 flex-col gap-4 rounded-md border p-4">
+			<div class="flex flex-1 flex-col gap-8 rounded-md border p-4">
 				<ScopesSection clientId={client.id} {scopes} />
 				<div class="w-full border-t"></div>
 				<RolesSection clientId={client.id} {roles} />

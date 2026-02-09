@@ -12,13 +12,11 @@ namespace Infras.User.Services.Commands
     /// - Confidential clients: auto-generates a 256-bit client secret
     /// - Public clients: enforces PKCE (Proof Key for Code Exchange)
     /// </summary>
-    /// <param name="ClientId">Unique identifier for the client application</param>
     /// <param name="DisplayName">Human-readable name for the application</param>
     /// <param name="ClientType">Either 'public' or 'confidential' (defaults to 'public')</param>
     /// <param name="RedirectUris">Allowed redirect URIs after authentication</param>
     /// <param name="PostLogoutRedirectUris">Allowed redirect URIs after logout</param>
     public sealed record CreateApplicationCommand(
-        string ClientId,
         string DisplayName,
         string? ClientType,
         List<string>? RedirectUris,
@@ -58,16 +56,11 @@ namespace Infras.User.Services.Commands
     {
         public async Task<CreateApplicationResult> Handle(CreateApplicationCommand request, CancellationToken cancellationToken)
         {
-            if (await applicationManager.FindByClientIdAsync(request.ClientId, cancellationToken) != null)
-            {
-                throw new BussinessException("DUPLICATE_CLIENT", 409, "A client with this ID already exists.");
-            }
-
             var isConfidential = string.Equals(request.ClientType, ClientTypes.Confidential, StringComparison.OrdinalIgnoreCase);
 
             var descriptor = new OpenIddictApplicationDescriptor
             {
-                ClientId = request.ClientId,
+                ClientId = Guid.NewGuid().ToString("N"),
                 DisplayName = request.DisplayName,
                 ClientType = isConfidential ? ClientTypes.Confidential : ClientTypes.Public
             };
