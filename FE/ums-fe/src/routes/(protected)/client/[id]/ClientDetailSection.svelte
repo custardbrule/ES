@@ -4,6 +4,7 @@
 	import type { ClientViewModel, UpdateClientModel, FormField, FormState } from '$lib/types';
 	import type { ValidationResult } from '$lib/validator';
 	import { ValidatorBuilder, rules } from '$lib/validator';
+	import { PenSvg, SaveSvg } from '$lib/assets/icons';
 
 	let { client }: { client: ClientViewModel } = $props();
 
@@ -114,10 +115,13 @@
 				variant="secondary"
 				{loading}
 				disabled={!validationResult?.isValid}
-				onclick={() => handleUpdate(formModel)}>Save</Button
+				onclick={() => handleUpdate(formModel)}
+				><span class="inline-flex h-5 w-5">{@html SaveSvg}</span> Save</Button
 			>
 		{:else}
-			<Button variant="secondary" onclick={() => (editing = true)}>Edit</Button>
+			<Button variant="secondary" onclick={() => (editing = true)}
+				><span class="inline-flex h-5 w-5">{@html PenSvg}</span> Edit</Button
+			>
 		{/if}
 	</div>
 </div>

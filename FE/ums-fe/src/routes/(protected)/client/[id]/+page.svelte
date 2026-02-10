@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Modal } from '$lib/components';
 	import { goto } from '$app/navigation';
-	import { BackSvg } from '$lib/assets/icons';
+	import { BackSvg, DeleteSvg } from '$lib/assets/icons';
 	import ClientDetailSection from './ClientDetailSection.svelte';
 	import RolesSection from './RolesSection.svelte';
 	import ScopesSection from './ScopesSection.svelte';
@@ -45,7 +45,9 @@
 					<p class="text-sm text-gray-500">{client.clientId}</p>
 				</div>
 			</div>
-			<Button variant="danger" onclick={() => deleteDialogRef?.showModal()}>Delete</Button>
+			<Button variant="danger" onclick={() => deleteDialogRef?.showModal()}
+				><span class="inline-flex h-5 w-5">{@html DeleteSvg}</span></Button
+			>
 		</div>
 		<div class="flex w-full flex-1 flex-col gap-8 p-4 text-primary-text md:flex-row">
 			<ClientDetailSection {client} />
