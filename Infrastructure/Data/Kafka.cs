@@ -64,8 +64,8 @@ namespace Data
             return ServiceDescriptor.DescribeKeyed(ProducerType, Key, (provider, key) =>
             {
                 var factory = provider.GetRequiredKeyedService(FactoryType, key);
-                var createMethod = FactoryType.GetMethod("GetProducer", Type.EmptyTypes);
-                return createMethod.Invoke(factory, null);
+                var createMethod = FactoryType.GetMethod("GetProducer", Type.EmptyTypes)!;
+                return createMethod.Invoke(factory, null)!;
             }, Lifetime);
         }
     }

@@ -10,8 +10,13 @@ namespace Infras.Diary.Services
         {
             return type switch
             {
+                // Diary events
+                nameof(InitDiary) => JsonSerializer.Deserialize<InitDiary>(data),
+                nameof(ChangeDiaryVisibility) => JsonSerializer.Deserialize<ChangeDiaryVisibility>(data),
+                nameof(ChangeDiaryInfo) => JsonSerializer.Deserialize<ChangeDiaryInfo>(data),
+                // DailyDiary events
+                nameof(InitDailyDiary) => JsonSerializer.Deserialize<InitDailyDiary>(data),
                 nameof(AddSection) => JsonSerializer.Deserialize<AddSection>(data),
-                //nameof(RemoveSection) => JsonSerializer.Deserialize<RemoveSection>(data),
                 nameof(PinSection) => JsonSerializer.Deserialize<PinSection>(data),
                 _ => new { },
             };

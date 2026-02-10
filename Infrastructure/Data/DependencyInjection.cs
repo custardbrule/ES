@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
@@ -74,19 +75,38 @@ namespace App.Extensions.DependencyInjection
                 .AddOptions<ProducerConfig>()
                 .Configure(options => configuration.GetSection("KafkaSettings:ProducerSettings").Bind(options));
 
-            var typesWithAttributes = assembly.GetTypes()
-                .Where(type => type.GetCustomAttribute<RegisterKafkaProducerAttribute>(true) is not null &&
-                             !type.IsAbstract &&
-                             !type.IsInterface)
-                .ToList();
+            services
+                .AddOptions<ConsumerConfig>()
+                .Configure(options => configuration.GetSection("KafkaSettings:ConsumerSettings").Bind(options));
 
-            foreach (var type in typesWithAttributes)
+            var types = assembly.GetTypes()
+                .Where(type => !type.IsAbstract && !type.IsInterface)
+                .Select(type => (type, producer: type.GetCustomAttribute<RegisterKafkaProducerAttribute>(true), consumer: type.GetCustomAttribute<RegisterKafkaConsumerAttribute>(true)))
+                .Where(x => x.producer != null || x.consumer != null);
+
+            foreach (var (type, producerAttr, consumerAttr) in types)
             {
-                var attribute = type.GetCustomAttribute<RegisterKafkaProducerAttribute>(true)!;
-                // Add factory
-                services.TryAdd(attribute.GetServiceDescriptor());
-                // add IProducer<,>
-                services.TryAdd(attribute.GetProducerServiceDescriptor());
+                if (producerAttr != null)
+                {
+                    // Keyed registration (for multiple producers of same type)
+                    services.TryAdd(producerAttr.GetServiceDescriptor());
+                    services.TryAdd(producerAttr.GetProducerServiceDescriptor());
+                    // Non-keyed registration (for direct injection)
+                    var factoryType = typeof(IProducerFactory<,>).MakeGenericType(producerAttr.KeyType, producerAttr.ValueType);
+                    var producerType = typeof(IProducer<,>).MakeGenericType(producerAttr.KeyType, producerAttr.ValueType);
+                    services.TryAdd(new ServiceDescriptor(factoryType, producerAttr.ImplementType, producerAttr.Lifetime));
+                    services.TryAdd(new ServiceDescriptor(producerType, sp =>
+                    {
+                        var factory = (dynamic)sp.GetRequiredService(factoryType);
+                        return factory.GetProducer();
+                    }, producerAttr.Lifetime));
+                }
+
+                if (consumerAttr != null)
+                {
+                    // Each consumer is a self-contained BackgroundService
+                    services.AddSingleton(typeof(IHostedService), type);
+                }
             }
 
             return services;
