@@ -20,6 +20,7 @@ namespace Infras.Diary.Services.Queries.Diary
             var taskGetDiary = _elasticsearchContext.Client.GetAsync<DiaryViewModel>(DiaryConstants.ESIndex, request.Id, cancellationToken);
             var taskGetDays = _elasticsearchContext.Client.SearchAsync<DailyDiaryViewModel>(r => r
                 .Indices(DailyDiaryConstants.ESIndex)
+                .Size(1000)
                 .Query(q => q
                     .Bool(b => b
                         .Must(m => m.Term(t => t.Field(f => f.DiaryId).Value(request.Id.ToString("N"))))

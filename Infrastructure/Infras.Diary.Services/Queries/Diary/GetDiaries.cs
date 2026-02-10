@@ -22,7 +22,7 @@ namespace Infras.Diary.Services.Queries.Diary
                 queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.Name)), Query = Name! });
 
             if (!string.IsNullOrWhiteSpace(AuthorId))
-                queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorId)), Query = AuthorId! });
+                queries.Add(new TermQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorId)), Value = AuthorId! });
 
             return queries.Count switch
             {
