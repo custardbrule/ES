@@ -104,7 +104,8 @@ namespace App.Extensions.DependencyInjection
 
                 if (consumerAttr != null)
                 {
-                    services.AddSingleton(typeof(IHostedService), type);
+                    for (var i = 0; i < consumerAttr.Instances; i++)
+                        services.AddSingleton(typeof(IHostedService), type);
                 }
             }
 

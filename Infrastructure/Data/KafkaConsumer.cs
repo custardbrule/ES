@@ -64,7 +64,10 @@ namespace Data
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class RegisterKafkaConsumerAttribute : Attribute;
+    public class RegisterKafkaConsumerAttribute(int instances = 1) : Attribute
+    {
+        public int Instances { get; } = instances;
+    }
 
     public class JsonDeserializer<T> : IDeserializer<T>
     {
