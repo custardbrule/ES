@@ -11,6 +11,7 @@
 	} from '$lib/types';
 	import type { ValidationResult } from '$lib/validator';
 	import { ValidatorBuilder, rules } from '$lib/validator';
+	import { PlusSvg } from '$lib/assets/icons';
 
 	let { data: pageData } = $props();
 
@@ -99,7 +100,9 @@
 <div class="flex h-full w-full flex-col gap-4 p-4 text-primary-text">
 	<div class="flex items-center justify-between">
 		<h1 class="text-3xl font-semibold">Clients</h1>
-		<Button onclick={() => dialogRef?.showModal()} size="md" variant="secondary">Add Client</Button>
+		<Button onclick={() => dialogRef?.showModal()} size="md" variant="secondary"
+			><span class="inline-flex h-5 w-5">{@html PlusSvg}</span>Add Client</Button
+		>
 	</div>
 
 	<!-- table -->

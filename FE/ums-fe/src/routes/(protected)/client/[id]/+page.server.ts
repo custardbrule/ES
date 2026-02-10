@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ fetch, params, depends }) => {
 	const res = await fetch(`/api/clients/${params.id}`);
 
 	if (res.status === 404) {
-		redirect(302, '/client');
+		redirect(302, `/not-found?from=/client/${params.id}`);
 	}
 
 	if (!res.ok) {
