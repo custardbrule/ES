@@ -1,12 +1,4 @@
-﻿using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Core.Bulk;
-using Elastic.Clients.Elasticsearch.QueryDsl;
-using Elastic.Clients.Elasticsearch.Serialization;
-using Elastic.Transport;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -14,6 +6,14 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Core.Bulk;
+using Elastic.Clients.Elasticsearch.QueryDsl;
+using Elastic.Clients.Elasticsearch.Serialization;
+using Elastic.Transport;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Data
 {
@@ -126,7 +126,7 @@ namespace Data
             return settings;
         }
     }
-    
+
     public interface IElasticSearchContext
     {
         ElasticsearchClient Client { get; }
@@ -221,7 +221,7 @@ namespace Data
 
             if (documents == null || !documents.Any()) throw new ArgumentException("Documents collection cannot be null or empty", nameof(documents));
 
-            if (getDocumentId == null) throw new ArgumentNullException(nameof(getDocumentId));
+            ArgumentNullException.ThrowIfNull(getDocumentId);
 
             var idxOperations = documents.Select(document =>
             {
@@ -257,7 +257,7 @@ namespace Data
 
             if (documents == null || !documents.Any()) throw new ArgumentException("Documents collection cannot be null or empty", nameof(documents));
 
-            if (getDocumentId == null) throw new ArgumentNullException(nameof(getDocumentId));
+            ArgumentNullException.ThrowIfNull(getDocumentId);
 
             var bulkRequest = new BulkRequest(indexName)
             {
