@@ -1,9 +1,8 @@
+using System.Text.Json;
 using Confluent.Kafka;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
 
 namespace Data
 {
@@ -30,7 +29,7 @@ namespace Data
             await Task.Yield();
 
             using var consumer = new ConsumerBuilder<TKey, TValue>(_config)
-                .SetValueDeserializer((IDeserializer<TValue>)new JsonDeserializer<TValue>())
+                .SetValueDeserializer(new JsonDeserializer<TValue>())
                 .Build();
 
             consumer.Subscribe(Topic);

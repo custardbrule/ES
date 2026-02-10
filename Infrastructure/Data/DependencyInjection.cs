@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System.Reflection;
+using Confluent.Kafka;
 using Data;
 using Elastic.Clients.Elasticsearch;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
-using System.Reflection;
 
 namespace App.Extensions.DependencyInjection
 {
@@ -104,7 +104,6 @@ namespace App.Extensions.DependencyInjection
 
                 if (consumerAttr != null)
                 {
-                    // Each consumer is a self-contained BackgroundService
                     services.AddSingleton(typeof(IHostedService), type);
                 }
             }
