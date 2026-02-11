@@ -26,9 +26,6 @@ namespace Diary.Api.Controllers
         [HttpPost(Name = "Add Diary")]
         public async Task<IActionResult> AddDiary([FromBody] CreateDiaryRequest request) => Ok(await _publisher.Send<CreateDiaryRequest, long>(request));
 
-        [HttpPost(Name = "Add Day")]
-        public async Task<IActionResult> AddDay([FromBody] AddDayRequest request) => Ok(await _publisher.Send<AddDayRequest, long>(request));
-
         [HttpPost(Name = "Add Section")]
         public async Task<IActionResult> AddSection([FromBody] AddDiarySectionRequest request) => Ok(await _publisher.Send<AddDiarySectionRequest, long>(request));
 

@@ -7,7 +7,7 @@ using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
-    public record PinSectionRequest(Guid DayId, string TimeZoneId, Guid SectionId, bool IsPinned) : IRequest<long>;
+    public record PinSectionRequest(Guid DiaryId, string TimeZoneId, Guid SectionId, bool IsPinned) : IRequest<long>;
 
     public class PinSectionHandler(
         KurrentDBClient kurrentDBClient,
@@ -16,10 +16,10 @@ namespace Infras.Diary.Services.Commands.Diary
     {
         public async Task<long> Handle(PinSectionRequest request, CancellationToken cancellationToken)
         {
-            var streamKey = DailyDiaryConstants.GetStreamName(request.DayId, request.TimeZoneId);
+            var streamKey = DailyDiaryConstants.GetStreamName(request.DiaryId, request.TimeZoneId);
 
             var streamResult = kurrentDBClient.ReadStreamAsync(Direction.Backwards, streamKey, StreamPosition.End, 1, cancellationToken: cancellationToken);
-            if (await streamResult.ReadState == ReadState.StreamNotFound) throw new KeyNotFoundException($"Daily diary with ID {request.DayId} not found.");
+            if (await streamResult.ReadState == ReadState.StreamNotFound) throw new KeyNotFoundException($"Daily diary not found.");
 
             var eventData = new EventData(Uuid.NewUuid(), nameof(PinSection), new PinSection(request.SectionId, request.IsPinned).ObjectToBytes());
             var res = await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.StreamExists, [eventData], cancellationToken: cancellationToken);
