@@ -7,6 +7,7 @@ using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
+    public record ChangeDiaryVisibilityBody(EDiaryVisibility Visibility);
     public record ChangeDiaryVisibilityRequest(Guid DiaryId, EDiaryVisibility Visibility) : IRequest<long>;
 
     public class ChangeDiaryVisibilityHandler(

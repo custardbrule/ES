@@ -3,6 +3,7 @@ using CQRS;
 using Infras.Diary.Services.Pipelines;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RequestValidatior;
 using System.Reflection;
 
 namespace Infras.Diary.Services
@@ -14,8 +15,10 @@ namespace Infras.Diary.Services
             services.AddEventStore();
             services.AddElasticsearchCore(configuration);
             services.AddCQRS(ServiceLifetime.Transient, Assembly.GetExecutingAssembly());
+            services.AddScoped(typeof(IPipeline<,>), typeof(ValidationPipe<,>));
             services.AddScoped(typeof(IPipeline<,>), typeof(LogPipe<,>));
             services.RegisterKafkaServices(configuration, Assembly.GetExecutingAssembly());
+            services.AddValidators(Assembly.GetExecutingAssembly());
 
             return services;
         }

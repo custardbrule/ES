@@ -9,11 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.*" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Infrastructure\Infras.Diary.Services\Infras.Diary.Services.csproj" />
+    <ProjectReference Include="..\..\Shared\RequestValidatior\RequestValidatior.csproj" />
   </ItemGroup>
 
 </Project>

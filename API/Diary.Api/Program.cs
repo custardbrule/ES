@@ -1,8 +1,7 @@
-using App.Extensions.DependencyInjection;
-using CQRS;
+using Diary.Api.Middleware;
 using Infras.Diary.Services;
-using Infras.Diary.Services.Pipelines;
-using System.Reflection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Diary.Api
 {
@@ -20,9 +19,21 @@ namespace Diary.Api
             builder.Services.AddSwaggerGen();
             builder.Services.ConfigInfras(builder.Configuration);
 
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = builder.Configuration["Authentication:Authority"];
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false
+                    };
+                });
+            builder.Services.AddAuthorization();
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            app.UseExceptionHandling();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -31,6 +42,7 @@ namespace Diary.Api
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

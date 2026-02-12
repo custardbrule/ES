@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\Shared\CQRS\CQRS.csproj" />
     <ProjectReference Include="..\..\Shared\Utilities\Utilities.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\..\Shared\RequestValidatior\RequestValidatior.csproj" />
   </ItemGroup>
 
 </Project>

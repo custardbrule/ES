@@ -19,8 +19,9 @@ namespace Domain.Diary.DiaryRoot
         public const string Base = nameof(DailyDiary);
         public const string ESIndex = "es_daily_diary";
         public static string GetId(Guid id) => $"{id:N}";
-        public static string GetStreamName(Guid id, string timeZoneId) => $"{Base}_{id:N}_{GetDateFromTimeZone(timeZoneId)}";
+        public static string GetStreamName(Guid diaryId, DateOnly date) => $"{Base}_{diaryId:N}_{date:ddMMyyyy}";
+        public static string GetStreamName(Guid diaryId, string timeZoneId) => GetStreamName(diaryId, GetDateFromTimeZone(timeZoneId));
 
-        private static string GetDateFromTimeZone(string timeZoneId) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId)).ToString("ddMMyyyy");
+        public static DateOnly GetDateFromTimeZone(string timeZoneId) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId)));
     }
 }

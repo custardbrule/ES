@@ -3,11 +3,22 @@ using CQRS;
 using Domain.Diary.DiaryRoot;
 using Infras.Diary.Services.Kafka;
 using KurrentDB.Client;
+using RequestValidatior;
 using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
+    public record PinSectionBody(string TimeZoneId, Guid SectionId, bool IsPinned);
     public record PinSectionRequest(Guid DiaryId, string TimeZoneId, Guid SectionId, bool IsPinned) : IRequest<long>;
+
+    public sealed class PinSectionValidator : BaseValidator<PinSectionRequest>
+    {
+        public PinSectionValidator()
+        {
+            RuleFor(x => x.TimeZoneId).With(tz => ValidatorHelper.IsValidTimeZone(tz), "TimeZoneId is invalid.");
+            RuleFor(x => x.SectionId).With(id => id != Guid.Empty, "SectionId is required.");
+        }
+    }
 
     public class PinSectionHandler(
         KurrentDBClient kurrentDBClient,

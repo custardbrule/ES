@@ -17,6 +17,7 @@ namespace Infras.Diary.Services
                 // DailyDiary events
                 nameof(InitDailyDiary) => JsonSerializer.Deserialize<InitDailyDiary>(data),
                 nameof(AddSection) => JsonSerializer.Deserialize<AddSection>(data),
+                nameof(RemoveSection) => JsonSerializer.Deserialize<RemoveSection>(data),
                 nameof(PinSection) => JsonSerializer.Deserialize<PinSection>(data),
                 _ => new { },
             };

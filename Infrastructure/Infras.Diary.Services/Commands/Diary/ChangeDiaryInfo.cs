@@ -3,11 +3,21 @@ using CQRS;
 using Domain.Diary.DiaryRoot;
 using Infras.Diary.Services.Kafka;
 using KurrentDB.Client;
+using RequestValidatior;
 using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
+    public record ChangeDiaryInfoBody(string Name, string Description);
     public record ChangeDiaryInfoRequest(Guid DiaryId, string Name, string Description) : IRequest<long>;
+
+    public sealed class ChangeDiaryInfoValidator : BaseValidator<ChangeDiaryInfoRequest>
+    {
+        public ChangeDiaryInfoValidator()
+        {
+            RuleFor(x => x.Name).With(n => !string.IsNullOrWhiteSpace(n), "Name is required.");
+        }
+    }
 
     public class ChangeDiaryInfoHandler(
         KurrentDBClient kurrentDBClient,
