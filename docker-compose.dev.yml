@@ -128,7 +128,7 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/dev-cert.pfx
       - ConnectionStrings__UserConnection=Server=mssql;Database=${USER_DB};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
       - ConnectionStrings__QuartzConnection=Server=mssql;Database=${QUARTZ_DB};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
-      - Elasticsearch__ConnectionString=http://elasticsearch:${ELASTIC_PORT}
+      - Elasticsearch__ConnectionString=http://elasticsearch:9200
       - Elasticsearch__Username=${ELASTIC_USERNAME}
       - Elasticsearch__Password=${ELASTIC_PASSWORD}
       - KafkaSettings__ProducerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
