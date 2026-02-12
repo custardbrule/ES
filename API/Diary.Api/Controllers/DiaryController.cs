@@ -26,8 +26,8 @@ namespace Diary.Api.Controllers
         [HttpPost(Name = "Add Diary")]
         public async Task<IActionResult> AddDiary([FromBody] CreateDiaryRequest request) => Ok(await _publisher.Send<CreateDiaryRequest, long>(request));
 
-        [HttpPost(Name = "Add Section")]
-        public async Task<IActionResult> AddSection([FromBody] AddDiarySectionRequest request) => Ok(await _publisher.Send<AddDiarySectionRequest, long>(request));
+        [HttpPost("{id}", Name = "Add Section")]
+        public async Task<IActionResult> AddSection(Guid id, [FromBody] AddDiarySectionRequestBody request) => Ok(await _publisher.Send<AddDiarySectionRequest, long>(new AddDiarySectionRequest(id, request)));
 
         [HttpPatch(Name = "Change Diary Visibility")]
         public async Task<IActionResult> ChangeDiaryVisibility([FromBody] ChangeDiaryVisibilityRequest request) => Ok(await _publisher.Send<ChangeDiaryVisibilityRequest, long>(request));

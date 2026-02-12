@@ -1,0 +1,24 @@
+<label
+  class="inline-flex items-center gap-2 cursor-pointer select-none"
+  [class.opacity-50]="disabled"
+  [class.cursor-not-allowed]="disabled"
+>
+  <span
+    class="checkbox"
+    [class.checked]="checked"
+    (click)="toggle()"
+    (keydown.space)="toggle(); $event.preventDefault()"
+    role="checkbox"
+    tabindex="0"
+    [attr.aria-checked]="checked"
+    [attr.aria-disabled]="disabled"
+  >
+    @if (checked) {
+      <app-svg-icon class="tick" name="tick-24"></app-svg-icon>
+    }
+  </span>
+  @if (label) {
+    <span class="text-label-sm">{{ label }}</span>
+  }
+  <ng-content></ng-content>
+</label>

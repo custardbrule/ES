@@ -110,18 +110,42 @@
 </div>
 
 <app-modal #modal>
-  <div
-    class="bg-bg-contrast-1 p-6 rounded-lg text-contrast-1 flex flex-col gap-4"
+  <form
+    [formGroup]="sectionForm"
+    (ngSubmit)="onSubmitSection(modal)"
+    class="bg-bg-contrast-1 p-6 rounded-lg text-contrast-1 flex flex-col gap-4 w-[90vw] max-w-[500px]"
   >
-    <h2>My Modal</h2>
-    <p>This renders outside app-root</p>
-    <div>
+    <div class="flex flex-col gap-1">
+      <textarea
+        formControlName="detail"
+        rows="5"
+        placeholder="interesting..."
+        class="w-full rounded-md border border-border-primary bg-white px-3 py-2 text-body-md outline-none focus:ring-2 focus:ring-bg-secondary resize-none"
+      ></textarea>
+      @if (sectionForm.get('detail')?.invalid && sectionForm.get('detail')?.touched) {
+        @for (error of sectionForm.get('detail')?.errors | keyvalue; track error.key) {
+          <span class="text-red-500 text-body-sm">{{ error.key }}</span>
+        }
+      }
+    </div>
+
+    <app-checkbox formControlName="isPinned" label="Pinned"></app-checkbox>
+
+    <div class="flex justify-end gap-2 pt-2">
       <button
-        class="rounded border border-border-primary cursor-pointer hover:brightness-95 bg-bg-yellow-primary px-4 py-2"
+        type="button"
+        class="rounded border border-border-primary cursor-pointer hover:brightness-95 px-4 py-2 text-body-md"
         (click)="modal.close()"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="sectionForm.invalid"
+        class="rounded border border-border-primary cursor-pointer hover:brightness-95 bg-bg-yellow-primary px-4 py-2 text-body-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Save
       </button>
     </div>
-  </div>
+  </form>
 </app-modal>

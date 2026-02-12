@@ -1,0 +1,33 @@
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-bg-primary);
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
+  transition: all 150ms ease;
+
+  &:hover {
+    border-color: var(--color-bg-secondary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-bg-secondary);
+    outline-offset: 2px;
+  }
+
+  &.checked {
+    background: var(--color-bg-yellow-primary);
+    border-color: var(--color-bg-secondary);
+  }
+
+  .tick {
+    position: absolute;
+    top: -8px;
+    left: -4px;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+    transform: rotateZ(8deg);
+  }
+}
