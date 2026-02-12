@@ -4,16 +4,26 @@
   <div
     class="shadow-lg bg-bg-secondary py-4 px-4 md:px-8 max-h-full overflow-auto flex flex-col flex-1 md:gap-12 gap-8 md:rounded-sm shadow-md"
   >
-    <section class="flex gap-4">
-      <div
-        #canvas
-        class="h-[100px] w-[100px] min-w-[100px] border border-primary"
-      ></div>
-      <div class="flex flex-col gap-4 justify-center">
-        <h2 class="font-bold text-4xl text-primary">Title</h2>
-        <h3 class="font-semibold text text-secondary">Author</h3>
-      </div>
-    </section>
+    <div class="flex justify-between items-center">
+      <section class="flex gap-4">
+        <div
+          #canvas
+          class="h-[100px] w-[100px] min-w-[100px] border border-primary"
+        ></div>
+        <div class="flex flex-col gap-4 justify-center">
+          <h2 class="font-bold text-4xl text-primary">Title</h2>
+          <h3 class="font-semibold text text-secondary">Author</h3>
+        </div>
+      </section>
+      <button
+        (click)="modal.open()"
+        type="button"
+        class="cursor-pointer border rounded-md px-4 py-2 flex gap-2 items-center bg-bg-yellow-primary hover:brightness-95"
+      >
+        <span>Write</span>
+        <app-svg-icon name="pen-32" hoverName="pen-fill-32"></app-svg-icon>
+      </button>
+    </div>
 
     <div class="relative">
       <p
@@ -29,64 +39,89 @@
         iure maiores velit ratione laudantium, aspernatur, laboriosam expedita.
         Quaerat praesentium maxime exercitationem corrupti nulla? Et, hic ex.
       </p>
-      @if(((description.scrollHeight > description.clientHeight) && !isDescriptionExpanded) || isDescriptionExpanded) {
-      <button
-        type="button"
-        class="md:hidden md:block float-end mt-2 text-sm text-primary hover:text-secondary underline font-medium"
-        (click)="isDescriptionExpanded = !isDescriptionExpanded"
-      >
-        {{ isDescriptionExpanded ? 'Show less' : 'Read more' }}
-      </button>
+      @if (
+        (description.scrollHeight > description.clientHeight &&
+          !isDescriptionExpanded) ||
+        isDescriptionExpanded
+      ) {
+        <button
+          type="button"
+          class="md:hidden md:block float-end mt-2 text-sm text-primary hover:text-secondary underline font-medium"
+          (click)="isDescriptionExpanded = !isDescriptionExpanded"
+        >
+          {{ isDescriptionExpanded ? "Show less" : "Read more" }}
+        </button>
       }
     </div>
 
     <div
       class="flex flex-col gap-4 border border-border-secondary rounded-sm px-2 md:px-8 py-4"
     >
-      @for(day of days; track day.id){
-      <div class="flex flex-col gap-4 text-primary text-sm [&:not(:last-child)]:pb-4 [&:not(:last-child)]:border-b">
-        <div class="flex gap-2 text-md text-secondary items-center">
-          <span>{{ day.date }}</span>
-          <button
-            type="button"
-            class="bg-bg-yellow-primary rounded-md hover:brightness-125 active:scale-95 transition-transform"
-            (click)="toggleDay(day)"
-            [disabled]="day.isLoading"
-          >
-            <div
-              [class.rotate-180]="day.isExpanded"
-              class="transition-transform duration-300"
+      @for (day of days; track day.id) {
+        <div
+          class="flex flex-col gap-4 text-primary text-sm [&:not(:last-child)]:pb-4 [&:not(:last-child)]:border-b"
+        >
+          <div class="flex gap-2 text-md text-secondary items-center">
+            <span>{{ day.date }}</span>
+            <button
+              type="button"
+              class="bg-bg-yellow-primary rounded-md hover:brightness-125 active:scale-95 transition-transform"
+              (click)="toggleDay(day)"
+              [disabled]="day.isLoading"
             >
-              <app-svg-icon name="dropdown-arrow-24"></app-svg-icon>
-            </div>
-          </button>
-        </div>
-        @if(day.isLoading) {
-          <!-- Skeleton loading state -->
-          <div class="flex flex-col gap-4 px-4 animate-pulse">
-            @for(skeleton of [1,2,3]; track skeleton) {
-              <div class="flex gap-4">
-                <div class="w-12 h-4 bg-bg-yellow-primary rounded"></div>
-                <div class="flex-1 h-4 bg-bg-yellow-primary rounded"></div>
+              <div
+                [class.rotate-180]="day.isExpanded"
+                class="transition-transform duration-300"
+              >
+                <app-svg-icon name="dropdown-arrow-24"></app-svg-icon>
               </div>
-            }
+            </button>
           </div>
-        }
-        @if(day.isExpanded && day.sections.length > 0 && !day.isLoading) {
-          @for(section of day.sections; track $index) {
-            <div class="flex flex-col gap-2 md:gap-4 md:px-4">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-secondary">{{ section.time }}</span>
-                @if(section.isPinned) {
-                  <app-svg-icon name="pin-24"></app-svg-icon>
-                }
-              </div>
-              <p class="indent-4">{{ section.content }}</p>
+          @if (day.isLoading) {
+            <!-- Skeleton loading state -->
+            <div class="flex flex-col gap-4 px-4 animate-pulse">
+              @for (skeleton of [1, 2, 3]; track skeleton) {
+                <div class="flex gap-4">
+                  <div class="w-12 h-4 bg-bg-yellow-primary rounded"></div>
+                  <div class="flex-1 h-4 bg-bg-yellow-primary rounded"></div>
+                </div>
+              }
             </div>
           }
-        }
-      </div>
+          @if (day.isExpanded && day.sections.length > 0 && !day.isLoading) {
+            @for (section of day.sections; track $index) {
+              <div class="flex flex-col gap-2 md:gap-4 md:px-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-secondary">{{
+                    section.time
+                  }}</span>
+                  @if (section.isPinned) {
+                    <app-svg-icon name="pin-24"></app-svg-icon>
+                  }
+                </div>
+                <p class="indent-4">{{ section.content }}</p>
+              </div>
+            }
+          }
+        </div>
       }
     </div>
   </div>
 </div>
+
+<app-modal #modal>
+  <div
+    class="bg-bg-contrast-1 p-6 rounded-lg text-contrast-1 flex flex-col gap-4"
+  >
+    <h2>My Modal</h2>
+    <p>This renders outside app-root</p>
+    <div>
+      <button
+        class="rounded border border-border-primary cursor-pointer hover:brightness-95 bg-bg-yellow-primary px-4 py-2"
+        (click)="modal.close()"
+      >
+        Save
+      </button>
+    </div>
+  </div>
+</app-modal>

@@ -12,7 +12,6 @@ import { ModalComponent } from '@src/app/components/modal/modal.component';
     SvgIconComponent,
     BaseDropdownComponent,
     BaseSearchBarComponent,
-    ModalComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

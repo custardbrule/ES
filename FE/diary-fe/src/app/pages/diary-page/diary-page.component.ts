@@ -5,10 +5,12 @@ import {
 } from '@angular/core';
 import { SvgIconComponent } from "@src/app/components/svg-icon/svg-icon.component";
 import { DiaryMockService, DiaryDay } from '@src/app/services/diary-mock.service';
+import { ModalComponent } from "@src/app/components/modal/modal.component";
+import { FormBuilderService } from '@src/app/services/form-builder.service';
 
 @Component({
   selector: 'app-diary-page',
-  imports: [SvgIconComponent, CommonModule],
+  imports: [SvgIconComponent, CommonModule, ModalComponent],
   templateUrl: './diary-page.component.html',
   styleUrl: './diary-page.component.scss',
 })
@@ -16,7 +18,7 @@ export class DiaryPageComponent implements OnInit {
   days: DiaryDay[] = [];
   isDescriptionExpanded = false;
 
-  constructor(private diaryService: DiaryMockService) {}
+  constructor(private diaryService: DiaryMockService, private formService: FormBuilderService) {}
 
   ngOnInit() {
     this.loadDays();
