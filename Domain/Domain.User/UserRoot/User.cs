@@ -62,6 +62,9 @@ namespace Domain.User.UserRoot
             return this with { Password = HashPassword(newPassword, secretKey) };
         }
 
+        public User ResetPassword(string newPassword, string secretKey)
+            => this with { Password = HashPassword(newPassword, secretKey) };
+
         /// <summary>
         /// Adds a role to the user
         /// </summary>

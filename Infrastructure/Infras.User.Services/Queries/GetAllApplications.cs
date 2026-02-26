@@ -1,11 +1,24 @@
 using CQRS;
 using Infras.User.Services.Dtos;
 using OpenIddict.Abstractions;
+using RequestValidatior;
 using Utilities;
 
 namespace Infras.User.Services.Queries
 {
     public sealed record GetAllApplicationsQuery(int Page = 1, int PageSize = 10) : IRequest<PagedList<ApplicationDto>>;
+
+    public sealed class GetAllApplicationsQueryValidator : BaseValidator<GetAllApplicationsQuery>
+    {
+        public GetAllApplicationsQueryValidator()
+        {
+            RuleFor(x => x.Page)
+                .With(p => p >= 1, "Page must be at least 1.");
+            RuleFor(x => x.PageSize)
+                .With(s => s >= 10, "PageSize must be at least 10.")
+                .With(s => s <= 100, "PageSize must not exceed 100.");
+        }
+    }
 
     internal sealed class GetAllApplicationsHandler(
         IOpenIddictApplicationManager applicationManager)
@@ -13,8 +26,8 @@ namespace Infras.User.Services.Queries
     {
         public async Task<PagedList<ApplicationDto>> Handle(GetAllApplicationsQuery request, CancellationToken cancellationToken)
         {
-            var page = request.Page < 1 ? 1 : request.Page;
-            var pageSize = request.PageSize < 1 ? 10 : request.PageSize > 100 ? 100 : request.PageSize;
+            var page = request.Page;
+            var pageSize = request.PageSize;
             var offset = (page - 1) * pageSize;
 
             var totalCount = await applicationManager.CountAsync(cancellationToken);

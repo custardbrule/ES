@@ -74,7 +74,8 @@ namespace Infras.User.Services
                         .EnableAuthorizationEndpointPassthrough()
                         .EnableTokenEndpointPassthrough()
                         .EnableUserinfoEndpointPassthrough()
-                        .EnableLogoutEndpointPassthrough();
+                        .EnableLogoutEndpointPassthrough()
+                        .DisableTransportSecurityRequirement();
                 })
                 .AddValidation(options =>
                 {

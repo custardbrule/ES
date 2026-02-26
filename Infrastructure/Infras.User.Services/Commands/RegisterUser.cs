@@ -78,11 +78,10 @@ namespace Infras.User.Services.Commands
 
             for (int i = 0; i < 10; i++)
             {
-                var plainCode = GenerateRandomCode(8);
+                var plainCode = CodeGenerator.GenerateRecoveryCode();
                 plainTextCodes.Add(plainCode);
 
-                var hashedCode = HashCode(plainCode);
-                var recoveryCode = RecoveryCode.Create(user.Id, hashedCode);
+                var recoveryCode = RecoveryCode.Create(user.Id, CodeGenerator.HashRecoveryCode(plainCode));
                 recoveryCodes.Add(recoveryCode);
             }
 
@@ -90,26 +89,6 @@ namespace Infras.User.Services.Commands
             await context.SaveChangesAsync(cancellationToken);
 
             return new RegisterUserResult(user.Id, plainTextCodes);
-        }
-
-        private static string GenerateRandomCode(int length)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var code = new char[length];
-
-            for (int i = 0; i < length; i++)
-            {
-                code[i] = chars[System.Security.Cryptography.RandomNumberGenerator.GetInt32(chars.Length)];
-            }
-
-            return new string(code);
-        }
-
-        private static string HashCode(string code)
-        {
-            var bytes = System.Text.Encoding.UTF8.GetBytes(code);
-            var hash = System.Security.Cryptography.SHA256.HashData(bytes);
-            return Convert.ToBase64String(hash);
         }
     }
 }

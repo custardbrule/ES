@@ -23,6 +23,7 @@ namespace Diary.Api
                 .AddJwtBearer(options =>
                 {
                     options.Authority = builder.Configuration["Authentication:Authority"];
+                    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateAudience = false

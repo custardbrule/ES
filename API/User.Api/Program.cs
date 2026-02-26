@@ -48,8 +48,11 @@ namespace User.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -137,7 +140,7 @@ namespace User.Api
                     ClientId = "swagger-client",
                     ClientSecret = "swagger-secret",
                     DisplayName = "Swagger API Client",
-                    RedirectUris = { new Uri("https://localhost:7000/swagger/oauth2-redirect.html") },
+                    RedirectUris = { new Uri("http://localhost:5100/swagger/oauth2-redirect.html") },
                     Permissions =
                     {
                         Permissions.Endpoints.Authorization,

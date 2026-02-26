@@ -1,4 +1,11 @@
-﻿using Confluent.Kafka;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,12 +14,6 @@ using Microsoft.Extensions.Options;
 using Quartz;
 using Quartz.Impl.AdoJobStore.Common;
 using Quartz.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using static Confluent.Kafka.ConfigPropertyNames;
 
 namespace Data
@@ -98,9 +99,29 @@ namespace Data
         protected abstract string Topic { get; }
         protected abstract Task HandleAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
+        private async Task EnsureTopicExistsAsync()
+        {
+            var adminConfig = new AdminClientConfig { BootstrapServers = _config.BootstrapServers };
+            using var adminClient = new AdminClientBuilder(adminConfig).Build();
+            try
+            {
+                await adminClient.CreateTopicsAsync(
+                [
+                    new TopicSpecification { Name = Topic }
+                ]);
+                _logger.LogInformation("Created Kafka topic: {Topic}", Topic);
+            }
+            catch (CreateTopicsException ex) when (ex.Results.All(r => r.Error.Code == ErrorCode.TopicAlreadyExists))
+            {
+                // Topic already exists, nothing to do
+            }
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Yield();
+
+            await EnsureTopicExistsAsync();
 
             using var consumer = new ConsumerBuilder<TKey, TValue>(_config)
                 .SetValueDeserializer(new JsonDeserializer<TValue>())
@@ -111,9 +132,10 @@ namespace Data
 
             while (!stoppingToken.IsCancellationRequested)
             {
+                ConsumeResult<TKey, TValue>? result = null;
                 try
                 {
-                    var result = consumer.Consume(stoppingToken);
+                    result = consumer.Consume(stoppingToken);
                     if (result?.Message == null) continue;
 
                     await HandleAsync(result.Message.Key, result.Message.Value, stoppingToken);
@@ -127,13 +149,39 @@ namespace Data
                 {
                     break;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (result?.Message != null)
                 {
                     _logger.LogError(ex, "Error handling Kafka message on topic {Topic}", Topic);
+                    await OnMessageFailedAsync(result.Message.Key, result.Message.Value, ex, stoppingToken);
+                    consumer.Commit(result);
                 }
             }
 
             consumer.Close();
+        }
+
+        /// <summary>
+        /// Called when HandleAsync throws. Override to send the message to a DLQ.
+        /// Default behaviour: log and skip (offset is committed by the base class after this returns).
+        /// </summary>
+        protected virtual Task OnMessageFailedAsync(TKey key, TValue value, Exception exception, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        /// <summary>
+        /// Produces the failed message to {Topic}.dlq as JSON.
+        /// Call this from an OnMessageFailedAsync override.
+        /// </summary>
+        protected async Task SendToDlqAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        {
+            var dlqTopic = $"{Topic}.dlq";
+            var producerConfig = new ProducerConfig { BootstrapServers = _config.BootstrapServers };
+            using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
+            await producer.ProduceAsync(dlqTopic, new Message<string, string>
+            {
+                Key = JsonSerializer.Serialize(key),
+                Value = JsonSerializer.Serialize(value)
+            }, cancellationToken);
+            _logger.LogWarning("Sent failed message to DLQ: {DlqTopic}", dlqTopic);
         }
     }
 

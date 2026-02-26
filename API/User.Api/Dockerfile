@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 5189
-EXPOSE 7155
+EXPOSE 6000
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 # Install Node.js for Tailwind CSS
@@ -19,8 +18,7 @@ COPY ["Domain/Domain.User/Domain.User.csproj", "Domain/Domain.User/"]
 COPY ["Domain/Seed/Seed.csproj", "Domain/Seed/"]
 COPY ["Shared/CQRS/CQRS.csproj", "Shared/CQRS/"]
 COPY ["Shared/Utilities/Utilities.csproj", "Shared/Utilities/"]
-COPY ["Shared/RequestValidator/RequestValidator.csproj", "Shared/RequestValidator/"]
-COPY ["Shared/DataStore/DataStore.csproj", "Shared/DataStore/"]
+COPY ["Shared/RequestValidatior/RequestValidatior.csproj", "Shared/RequestValidatior/"]
 
 # Restore dependencies (cached unless .csproj files change)
 RUN dotnet restore "API/User.Api/User.Api.csproj"
