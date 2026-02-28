@@ -32,6 +32,12 @@ namespace User.Api
 
             builder.Services.AddAuthorization();
 
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+            }
+
             var app = builder.Build();
 
             // Seed OpenIddict clients
@@ -56,6 +62,11 @@ namespace User.Api
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseCors();
+            }
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -115,6 +126,32 @@ namespace User.Api
                     DisplayName = "UMS Client Application",
                     RedirectUris = { new Uri("https://localhost:7001/signin-oidc"), new Uri("http://localhost:5173/callback") },
                     PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("https://localhost:5173/signout-callback-oidc") },
+                    Permissions =
+                    {
+                        Permissions.Endpoints.Authorization,
+                        Permissions.Endpoints.Token,
+                        Permissions.Endpoints.Logout,
+                        Permissions.GrantTypes.AuthorizationCode,
+                        Permissions.GrantTypes.RefreshToken,
+                        Permissions.ResponseTypes.Code,
+                        $"{Permissions.Prefixes.Scope}{Scopes.OpenId}",
+                        Permissions.Scopes.Email,
+                        Permissions.Scopes.Profile,
+                        Permissions.Scopes.Roles,
+                        Requirements.Features.ProofKeyForCodeExchange
+                    }
+                });
+            }
+
+            if (await manager.FindByClientIdAsync("diary-client") == null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "diary-client",
+                    ClientType = ClientTypes.Public,
+                    DisplayName = "Diary Client Application",
+                    RedirectUris = { new Uri("https://localhost:7001/signin-oidc"), new Uri("http://localhost:4200/callback") },
+                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("https://localhost:4200/signout-callback-oidc") },
                     Permissions =
                     {
                         Permissions.Endpoints.Authorization,

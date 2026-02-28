@@ -17,52 +17,58 @@
     <app-base-search-bar></app-base-search-bar>
     <!-- actions -->
     <div class="h-full flex gap-4 items-center">
-      <!-- profile -->
-      <app-base-dropdown>
-        <app-svg-icon
-          trigger
-          name="user-question-32"
-          hoverName="user-fill-32"
-        ></app-svg-icon>
+      @if (authService.isLoggedIn) {
+        <!-- profile -->
+        <app-base-dropdown>
+          <app-svg-icon
+            trigger
+            name="user-question-32"
+            hoverName="user-fill-32"
+          ></app-svg-icon>
 
-        <div content class="py-2 px-2">
-          <a
-            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
-            >Profile</a
-          >
-          <a
-            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
-            >Settings</a
-          >
-          <a
-            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
-            >Logout</a
-          >
-        </div>
-      </app-base-dropdown>
-      <!-- settings -->
-      <app-base-dropdown>
-        <app-svg-icon
-          trigger
-          name="gear-32"
-          hoverName="gear-fill-32"
-        ></app-svg-icon>
+          <div content class="py-2 px-2">
+            <a
+              class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+              >Profile</a
+            >
+            <a
+              class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+              >Settings</a
+            >
+            <a
+              (click)="authService.logout()"
+              class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+              >Logout</a
+            >
+          </div>
+        </app-base-dropdown>
+        <!-- settings -->
+        <app-base-dropdown>
+          <app-svg-icon
+            trigger
+            name="gear-32"
+            hoverName="gear-fill-32"
+          ></app-svg-icon>
 
-        <div content class="py-2 px-2">
-          <a
-            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
-            >Profile</a
-          >
-          <a
-            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
-            >Settings</a
-          >
-          <a
-            class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
-            >Logout</a
-          >
-        </div>
-      </app-base-dropdown>
+          <div content class="py-2 px-2">
+            <a
+              class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+              >Profile</a
+            >
+            <a
+              class="block rounded-md px-2 py-2 hover:bg-bg-secondary cursor-pointer text-primary hover:underline underline-offset-2"
+              >Settings</a
+            >
+          </div>
+        </app-base-dropdown>
+      } @else {
+        <button
+          (click)="authService.login()"
+          class="px-4 py-1.5 rounded-md bg-bg-yellow-primary text-bg-primary text-label-sm font-medium hover:opacity-90 cursor-pointer"
+        >
+          Login
+        </button>
+      }
     </div>
   </div>
   <!-- main-content -->

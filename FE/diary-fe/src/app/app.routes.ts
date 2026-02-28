@@ -8,5 +8,7 @@ import { ROUTE_DEF } from '@src/shared/constants/route-const';
 export const routes: Routes = [
   { path: ROUTE_DEF.home.base, component: HomePageComponent },
   { path: ROUTE_DEF.collection.base, component: DiaryPageComponent },
+  { path: 'callback', component: HomePageComponent },
+  { path: 'signout-callback-oidc', component: HomePageComponent },
   { path: '**', component: NotFoundComponent },
 ];

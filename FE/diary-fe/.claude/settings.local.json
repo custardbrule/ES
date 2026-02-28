@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install angular-oauth2-oidc --legacy-peer-deps)"
+    ]
+  }
+}

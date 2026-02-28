@@ -7,7 +7,8 @@
       "@src/*": ["./src/*"],
       "@app/*": ["./src/app/*"],
       "@pages/*": ["./src/app/pages/*"],
-      "@components/*": ["./src/app/components/*"]
+      "@components/*": ["./src/app/components/*"],
+      "@environments/*": ["./src/environments/*"]
     },
     "outDir": "./dist/out-tsc",
     "strict": true,

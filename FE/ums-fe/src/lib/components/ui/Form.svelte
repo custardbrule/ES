@@ -112,8 +112,8 @@
 					value={getFieldValue(field) as string[]}
 					onchange={(val) => {
 						updateField(field, val);
-						handleBlur(field.name);
 					}}
+					onblur={() => handleBlur(field.name)}
 					placeholder={field.placeholder}
 					disabled={disabled || field.disabled}
 				/>
