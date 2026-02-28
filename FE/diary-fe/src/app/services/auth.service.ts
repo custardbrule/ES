@@ -26,9 +26,13 @@ export class AuthService {
     await this.oauthService.loadDiscoveryDocument();
   }
 
+  private static readonly RETURN_URL_KEY = 'auth_return_url';
+
   async handleCallback(): Promise<void> {
     await this.oauthService.tryLogin();
-    this.router.navigateByUrl('/');
+    const returnUrl = sessionStorage.getItem(AuthService.RETURN_URL_KEY) ?? '/';
+    sessionStorage.removeItem(AuthService.RETURN_URL_KEY);
+    this.router.navigateByUrl(returnUrl);
   }
 
   get isLoggedIn(): boolean {
@@ -43,7 +47,8 @@ export class AuthService {
     return this.oauthService.getIdToken();
   }
 
-  login(): void {
+  login(returnUrl: string = this.router.url): void {
+    sessionStorage.setItem(AuthService.RETURN_URL_KEY, returnUrl);
     this.oauthService.initCodeFlow();
   }
 
