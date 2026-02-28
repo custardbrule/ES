@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
         () =>
           isPlatformBrowser(platformId)
             ? authService.configure()
-            : Promise.resolve(false),
+            : Promise.resolve(),
       deps: [AuthService, PLATFORM_ID],
       multi: true,
     },

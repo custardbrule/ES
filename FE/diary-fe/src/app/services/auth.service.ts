@@ -12,7 +12,7 @@ export class AuthService {
     private router: Router,
   ) {}
 
-  async configure(): Promise<boolean> {
+  async configure(): Promise<void> {
     this.oauthService.configure({
       issuer: environment.oidc.issuer,
       redirectUri: `${window.location.origin}/callback`,
@@ -22,13 +22,25 @@ export class AuthService {
       scope: environment.oidc.scope,
       showDebugInformation: false,
     });
-    const result = await this.oauthService.loadDiscoveryDocumentAndTryLogin();
-    if (result) this.router.navigateByUrl('/');
-    return result;
+    this.oauthService.setStorage(localStorage);
+    await this.oauthService.loadDiscoveryDocument();
+  }
+
+  async handleCallback(): Promise<void> {
+    await this.oauthService.tryLogin();
+    this.router.navigateByUrl('/');
   }
 
   get isLoggedIn(): boolean {
     return this.oauthService.hasValidAccessToken();
+  }
+
+  get accessToken(): string {
+    return this.oauthService.getAccessToken();
+  }
+
+  get idToken(): string {
+    return this.oauthService.getIdToken();
   }
 
   login(): void {
