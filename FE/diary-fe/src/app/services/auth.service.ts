@@ -3,6 +3,10 @@ import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '@environments/environment';
 
+export interface UserInfo {
+  sub: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -45,6 +49,11 @@ export class AuthService {
 
   get idToken(): string {
     return this.oauthService.getIdToken();
+  }
+
+  getUserInfo(): UserInfo | null {
+    const claims = this.oauthService.getIdentityClaims() as UserInfo | null;
+    return claims ?? null;
   }
 
   login(returnUrl: string = this.router.url): void {

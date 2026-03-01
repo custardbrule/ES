@@ -26,3 +26,10 @@ export interface GetDiariesResponse {
   page: number;
   pageSize: number;
 }
+
+export interface CreateDiaryRequest {
+  name: string;
+  description?: string;
+  authorId?: string;
+  diaryVisibility: EDiaryVisibility;
+}

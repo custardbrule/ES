@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { GetDiariesParams, GetDiariesResponse } from '../models/diary.models';
+import { CreateDiaryRequest, GetDiariesParams, GetDiariesResponse } from '../models/diary.models';
 
 @Injectable({
   providedIn: 'root',
@@ -21,5 +21,9 @@ export class DiaryService {
     if (params.pageSize != null) httpParams = httpParams.set('PageSize', params.pageSize);
 
     return this.http.get<GetDiariesResponse>(`${this.baseUrl}/GetDiaries`, { params: httpParams });
+  }
+
+  addDiary(body: CreateDiaryRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/AddDiary`, body);
   }
 }
