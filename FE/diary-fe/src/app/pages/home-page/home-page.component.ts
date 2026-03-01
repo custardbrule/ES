@@ -1,11 +1,10 @@
-import {
-  Component,
-} from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import * as THREE from 'three';
-
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of, startWith } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ROUTE_DEF as navigator } from '@src/shared/constants/route-const';
-
+import { DiaryService } from '@src/app/services/diary.service';
 @Component({
   selector: 'app-home-page',
   imports: [RouterLink],
@@ -14,41 +13,20 @@ import { ROUTE_DEF as navigator } from '@src/shared/constants/route-const';
   host: { ngSkipHydration: 'true' },
 })
 export class HomePageComponent {
-  renderer: THREE.WebGLRenderer | null = null;
-  scenes: THREE.Scene[] = [];
-  collections: {
-    id: string;
-    title: string;
-    description: string;
-    author: string;
-  }[] = [
-    {
-      id: '1',
-      title: 'Title',
-      description:
-        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Alias sapiente dolore delectus quo error reiciendis, ullam, sunt itaque eius est, recusandae ea deserunt pariatur praesentium eos maxime fuga consequatur ipsa!',
-      author: 'lorem',
-    },
-    {
-      id: '2',
-      title: 'Title',
-      description:
-        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Alias sapiente dolore delectus quo error reiciendis, ullam, sunt itaque eius est, recusandae ea deserunt pariatur praesentium eos maxime fuga consequatur ipsa!',
-      author: 'Author',
-    },
-    {
-      id: '3',
-      title: 'Title',
-      description: 'Lorem, ipsum dolor sit amee fuga consequatur ipsa!',
-      author: 'Author',
-    },
-    {
-      id: '4',
-      title: 'Title',
-      description:
-        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Alias sapiente dolore delectus quo error reiciendis, ullam, sunt itaque eius est, recusandae ea deserunt pariatur praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa! praesentium eos maxime fuga consequatur ipsa!',
-      author: 'Author',
-    },
-  ];
+  private diaryService = inject(DiaryService);
   navigator = navigator;
+
+  diaries = toSignal(
+    this.diaryService.getDiaries().pipe(
+      map((data) => ({ status: 'success' as const, data })),
+      catchError((err: HttpErrorResponse) =>
+        of({
+          status: 'error' as const,
+          message:
+            err.error?.message ?? err.message ?? 'Failed to load diaries',
+        }),
+      ),
+      startWith({ status: 'loading' as const }),
+    ),
+  );
 }

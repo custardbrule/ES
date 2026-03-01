@@ -31,6 +31,12 @@ namespace Diary.Api
                 });
             builder.Services.AddAuthorization();
 
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+            }
+
             var app = builder.Build();
 
             app.UseExceptionHandling();
@@ -40,8 +46,19 @@ namespace Diary.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
-            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseCors();
+            }
 
             app.UseAuthentication();
             app.UseAuthorization();

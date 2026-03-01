@@ -1,7 +1,8 @@
 import {
   ApplicationConfig,
-  APP_INITIALIZER,
   PLATFORM_ID,
+  inject,
+  provideAppInitializer,
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -10,7 +11,9 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './interceptors/auth.interceptor';
+import { errorInterceptor } from './interceptors/error.interceptor';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 
 import { routes } from './app.routes';
@@ -21,17 +24,12 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     provideOAuthClient(),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (authService: AuthService, platformId: object) =>
-        () =>
-          isPlatformBrowser(platformId)
-            ? authService.configure()
-            : Promise.resolve(),
-      deps: [AuthService, PLATFORM_ID],
-      multi: true,
-    },
+    provideAppInitializer(() => {
+      const authService = inject(AuthService);
+      const platformId = inject(PLATFORM_ID);
+      return isPlatformBrowser(platformId) ? authService.configure() : Promise.resolve();
+    }),
   ],
 };
