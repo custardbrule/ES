@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Security.Cryptography.X509Certificates;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Core.Bulk;
 using Elastic.Clients.Elasticsearch.QueryDsl;
-using Elastic.Clients.Elasticsearch.Serialization;
 using Elastic.Transport;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Data
 {
@@ -140,7 +129,7 @@ namespace Data
             where TPartial : class;
         Task<BulkResponse> BulkDeleteAsync<T>(string indexName, IEnumerable<string> documentIds) where T : class;
         Task<DeleteByQueryResponse> BulkDeleteByQueryAsync<T>(string indexName, Query query) where T : class;
-
+        Task EnsureIndexExistsAsync(string indexName);
     }
 
     public class ElasticSearchContext : IElasticSearchContext
@@ -152,6 +141,19 @@ namespace Data
             _client = client;
         }
         public ElasticsearchClient Client => _client;
+
+        /// <summary>
+        /// Ensures the specified index exists, creating it if it does not.
+        /// Silently passes if the index already exists.
+        /// </summary>
+        /// <param name="indexName">The name of the index to ensure exists</param>
+        /// <exception cref="Exception">Thrown when index creation fails for a reason other than already existing</exception>
+        public async Task EnsureIndexExistsAsync(string indexName)
+        {
+            var response = await _client.Indices.CreateAsync(indexName);
+            if (!response.IsSuccess() && response.ElasticsearchServerError?.Error?.Type != "resource_already_exists_exception")
+                throw new Exception($"Failed to create index '{indexName}': {response.ElasticsearchServerError?.Error?.Reason}");
+        }
 
         /// <summary>
         /// Performs index document

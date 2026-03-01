@@ -8,20 +8,20 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      switch (error.status) {
-        case 401:
-          router.navigate(['/login']);
-          break;
-        case 403:
-          router.navigate(['/forbidden']);
-          break;
-        case 500:
-        case 503:
-          router.navigate(['/error']);
-          break;
-      }
+      // switch (error.status) {
+      //   case 401:
+      //     router.navigate(['/login']);
+      //     break;
+      //   case 403:
+      //     router.navigate(['/forbidden']);
+      //     break;
+      //   case 500:
+      //   case 503:
+      //     router.navigate(['/error']);
+      //     break;
+      // }
 
       return throwError(() => error);
-    })
+    }),
   );
 };

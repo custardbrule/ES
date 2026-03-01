@@ -19,6 +19,7 @@ namespace Infras.Diary.Services
             services.AddScoped(typeof(IPipeline<,>), typeof(LogPipe<,>));
             services.RegisterKafkaServices(configuration, Assembly.GetExecutingAssembly());
             services.AddValidators(Assembly.GetExecutingAssembly());
+            services.AddHostedService<ElasticsearchIndexInitializer>();
 
             return services;
         }
