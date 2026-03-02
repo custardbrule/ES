@@ -89,11 +89,23 @@ namespace Data
     {
         private readonly ConsumerConfig _config;
         private readonly ILogger _logger;
+        private IProducer<string, string>? _dlqProducer;
 
         protected KafkaConsumerBase(IOptions<ConsumerConfig> config, ILogger logger)
         {
             _config = config.Value;
             _logger = logger;
+        }
+
+        private IProducer<string, string> GetDlqProducer()
+            => _dlqProducer ??= new ProducerBuilder<string, string>(
+                new ProducerConfig { BootstrapServers = _config.BootstrapServers }).Build();
+
+        public override void Dispose()
+        {
+            _dlqProducer?.Dispose();
+            base.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         protected abstract string Topic { get; }
@@ -152,7 +164,9 @@ namespace Data
                 catch (Exception ex) when (result?.Message != null)
                 {
                     _logger.LogError(ex, "Error handling Kafka message on topic {Topic}", Topic);
-                    await OnMessageFailedAsync(result.Message.Key, result.Message.Value, ex, stoppingToken);
+                    var retryHeader = result.Message.Headers.FirstOrDefault(h => h.Key == "x-dead-letter-retry-count");
+                    var retryCount = retryHeader != null && int.TryParse(Encoding.UTF8.GetString(retryHeader.GetValueBytes()), out var parsed) ? parsed : 0;
+                    await OnMessageFailedAsync(result.Message.Key, result.Message.Value, ex, retryCount, stoppingToken);
                     consumer.Commit(result);
                 }
             }
@@ -164,22 +178,31 @@ namespace Data
         /// Called when HandleAsync throws. Override to send the message to a DLQ.
         /// Default behaviour: log and skip (offset is committed by the base class after this returns).
         /// </summary>
-        protected virtual Task OnMessageFailedAsync(TKey key, TValue value, Exception exception, CancellationToken cancellationToken)
+        protected virtual Task OnMessageFailedAsync(TKey key, TValue value, Exception exception, int retryCount, CancellationToken cancellationToken)
             => Task.CompletedTask;
 
         /// <summary>
-        /// Produces the failed message to {Topic}.dlq as JSON.
+        /// Produces the failed message to {Topic}.dlq with error metadata in headers.
+        /// Pass retryCount from OnMessageFailedAsync so it increments across attempts.
         /// Call this from an OnMessageFailedAsync override.
         /// </summary>
-        protected async Task SendToDlqAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        protected async Task SendToDlqAsync(TKey key, TValue value, Exception exception, int retryCount, CancellationToken cancellationToken)
         {
             var dlqTopic = $"{Topic}.dlq";
-            var producerConfig = new ProducerConfig { BootstrapServers = _config.BootstrapServers };
-            using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
-            await producer.ProduceAsync(dlqTopic, new Message<string, string>
+            var headers = new Headers
+            {
+                { "x-dead-letter-original-topic", Encoding.UTF8.GetBytes(Topic) },
+                { "x-dead-letter-reason", Encoding.UTF8.GetBytes(exception.Message) },
+                { "x-dead-letter-exception", Encoding.UTF8.GetBytes(exception.GetType().FullName ?? exception.GetType().Name) },
+                { "x-dead-letter-timestamp", Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O")) },
+                { "x-dead-letter-retry-count", Encoding.UTF8.GetBytes((retryCount + 1).ToString()) }
+            };
+
+            await GetDlqProducer().ProduceAsync(dlqTopic, new Message<string, string>
             {
                 Key = JsonSerializer.Serialize(key),
-                Value = JsonSerializer.Serialize(value)
+                Value = JsonSerializer.Serialize(value),
+                Headers = headers
             }, cancellationToken);
             _logger.LogWarning("Sent failed message to DLQ: {DlqTopic}", dlqTopic);
         }
