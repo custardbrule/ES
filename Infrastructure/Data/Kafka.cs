@@ -97,6 +97,9 @@ namespace Data
             _logger = logger;
         }
 
+        protected string BootstrapServers => _config.BootstrapServers;
+        protected ILogger Logger => _logger;
+
         private IProducer<string, string> GetDlqProducer()
             => _dlqProducer ??= new ProducerBuilder<string, string>(
                 new ProducerConfig { BootstrapServers = _config.BootstrapServers }).Build();
@@ -109,7 +112,12 @@ namespace Data
         }
 
         protected abstract string Topic { get; }
-        protected abstract Task HandleAsync(TKey key, TValue value, CancellationToken cancellationToken);
+        protected abstract Task HandleAsync(TKey key, TValue value, Headers headers, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Set to false for consumers that subscribe via regex — topic auto-creation is skipped.
+        /// </summary>
+        protected virtual bool EnsureTopicOnStart => true;
 
         private async Task EnsureTopicExistsAsync()
         {
@@ -133,7 +141,7 @@ namespace Data
         {
             await Task.Yield();
 
-            await EnsureTopicExistsAsync();
+            if (EnsureTopicOnStart) await EnsureTopicExistsAsync();
 
             using var consumer = new ConsumerBuilder<TKey, TValue>(_config)
                 .SetValueDeserializer(new JsonDeserializer<TValue>())
@@ -150,7 +158,7 @@ namespace Data
                     result = consumer.Consume(stoppingToken);
                     if (result?.Message == null) continue;
 
-                    await HandleAsync(result.Message.Key, result.Message.Value, stoppingToken);
+                    await HandleAsync(result.Message.Key, result.Message.Value, result.Message.Headers, stoppingToken);
                     consumer.Commit(result);
                 }
                 catch (ConsumeException ex)
@@ -205,6 +213,100 @@ namespace Data
                 Headers = headers
             }, cancellationToken);
             _logger.LogWarning("Sent failed message to DLQ: {DlqTopic}", dlqTopic);
+        }
+    }
+
+    /// <summary>
+    /// Configure source topics whose DLQ messages the GenericDlqConsumer should skip.
+    /// Add entries when a topic has its own dedicated DLQ consumer with custom logic.
+    /// </summary>
+    public class GenericDlqOptions
+    {
+        public HashSet<string> IgnoredSourceTopics { get; set; } = [];
+    }
+
+    /// <summary>
+    /// Single consumer that handles ALL *.dlq topics via regex subscription.
+    /// Reads x-dead-letter-original-topic from headers, applies exponential backoff, then requeues.
+    /// Register once — no per-topic subclass needed.
+    /// To opt a topic out, add its name to GenericDlqOptions.IgnoredSourceTopics.
+    /// </summary>
+    [RegisterKafkaConsumer]
+    public class GenericDlqConsumer(
+        IOptions<ConsumerConfig> config,
+        ILogger<GenericDlqConsumer> logger,
+        IOptions<GenericDlqOptions> options)
+        : KafkaConsumerBase<string, string>(config, logger)
+    {
+        private const int MaxRetries = 3;
+        private static readonly TimeSpan[] BackoffDelays =
+        [
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(120)
+        ];
+
+        private readonly HashSet<string> _ignoredSourceTopics = options.Value.IgnoredSourceTopics;
+        private IProducer<string, string>? _requeueProducer;
+
+        protected override string Topic => "^.*\\.dlq$";
+        protected override bool EnsureTopicOnStart => false;
+
+        private IProducer<string, string> GetRequeueProducer()
+            => _requeueProducer ??= new ProducerBuilder<string, string>(
+                new ProducerConfig { BootstrapServers = BootstrapServers }).Build();
+
+        protected override async Task HandleAsync(string key, string value, Headers headers, CancellationToken cancellationToken)
+        {
+            var sourceTopicHeader = headers.FirstOrDefault(h => h.Key == "x-dead-letter-original-topic");
+            if (sourceTopicHeader == null)
+            {
+                Logger.LogWarning("DLQ message missing x-dead-letter-original-topic header, skipping. Key={Key}", key);
+                return;
+            }
+
+            var sourceTopic = Encoding.UTF8.GetString(sourceTopicHeader.GetValueBytes());
+
+            if (_ignoredSourceTopics.Contains(sourceTopic))
+            {
+                Logger.LogDebug("Skipping DLQ message for opted-out topic {Topic}", sourceTopic);
+                return;
+            }
+
+            var retryHeader = headers.FirstOrDefault(h => h.Key == "x-dead-letter-retry-count");
+            var retryCount = retryHeader != null && int.TryParse(Encoding.UTF8.GetString(retryHeader.GetValueBytes()), out var parsed)
+                ? parsed
+                : 1;
+
+            if (retryCount >= MaxRetries)
+            {
+                Logger.LogError("Message permanently dead after {MaxRetries} retries on topic {Topic}. Key={Key}",
+                    MaxRetries, sourceTopic, key);
+                return;
+            }
+
+            var delay = BackoffDelays[Math.Min(retryCount - 1, BackoffDelays.Length - 1)];
+            Logger.LogWarning("Requeuing to {Topic} (attempt {Count}/{Max}) after {Delay}s delay",
+                sourceTopic, retryCount, MaxRetries, delay.TotalSeconds);
+
+            await Task.Delay(delay, cancellationToken);
+
+            await GetRequeueProducer().ProduceAsync(sourceTopic, new Message<string, string>
+            {
+                Key = key,
+                Value = value,
+                Headers = new Headers
+                {
+                    { "x-dead-letter-retry-count", Encoding.UTF8.GetBytes(retryCount.ToString()) }
+                }
+            }, cancellationToken);
+        }
+
+        public override void Dispose()
+        {
+            _requeueProducer?.Dispose();
+            base.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 

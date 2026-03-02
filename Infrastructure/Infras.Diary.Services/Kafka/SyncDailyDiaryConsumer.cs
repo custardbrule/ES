@@ -17,7 +17,7 @@ namespace Infras.Diary.Services.Kafka
     {
         protected override string Topic => DiaryTopics.SyncDailyDiary;
 
-        protected override async Task HandleAsync(string key, SyncMessage value, CancellationToken cancellationToken)
+        protected override async Task HandleAsync(string key, SyncMessage value, Headers _, CancellationToken cancellationToken)
         {
             var daily = await kurrentDBClient
                 .ReadStreamAsync(Direction.Forwards, value.StreamKey, StreamPosition.Start, cancellationToken: cancellationToken)

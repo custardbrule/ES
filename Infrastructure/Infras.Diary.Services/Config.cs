@@ -1,4 +1,5 @@
 ﻿using App.Extensions.DependencyInjection;
+using Data;
 using CQRS;
 using Infras.Diary.Services.Pipelines;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +18,7 @@ namespace Infras.Diary.Services
             services.AddCQRS(ServiceLifetime.Transient, Assembly.GetExecutingAssembly());
             services.AddScoped(typeof(IPipeline<,>), typeof(ValidationPipe<,>));
             services.AddScoped(typeof(IPipeline<,>), typeof(LogPipe<,>));
+            services.AddOptions<GenericDlqOptions>();
             services.RegisterKafkaServices(configuration, Assembly.GetExecutingAssembly());
             services.AddValidators(Assembly.GetExecutingAssembly());
             services.AddHostedService<ElasticsearchIndexInitializer>();
