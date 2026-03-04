@@ -156,6 +156,7 @@ services:
       - KafkaSettings__ConsumerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
       - ConnectionStrings__QuartzConnection=Server=mssql;Database=${QUARTZ_DB};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
       - Authentication__Authority=http://user-api:${USER_API_PORT}
+      - Authentication__ValidIssuer=http://localhost:${USER_API_PORT}
     ports:
       - "${DIARY_API_PORT}:${DIARY_API_PORT}"
     depends_on:

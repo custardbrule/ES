@@ -26,7 +26,8 @@ namespace Diary.Api
                     options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateAudience = false
+                        ValidateAudience = false,
+                        ValidIssuer = builder.Configuration["Authentication:ValidIssuer"]
                     };
                 });
             builder.Services.AddAuthorization();
