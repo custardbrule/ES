@@ -33,7 +33,7 @@ namespace Infras.Diary.Services.Queries.Diary
         }
 
         public override SortOptions[] GetSort() => [
-            new SortOptions() { Field = new FieldSort { Field = nameof(Domain.Diary.DiaryRoot.Diary.CreatedDate), Order = SortOrder.Desc } }
+            new SortOptions() { Field = new FieldSort { Field = Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.CreatedDate), Order = SortOrder.Desc } }
         ];
 
         public override string[] GetSourceIncludes() => [

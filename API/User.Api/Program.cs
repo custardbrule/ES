@@ -114,6 +114,12 @@ namespace User.Api
                     Name = Scopes.Roles,
                     DisplayName = "Roles"
                 });
+
+                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+                {
+                    Name = Scopes.OfflineAccess,
+                    DisplayName = "Offline Access"
+                });
             }
 
             // Check if client already exists
@@ -138,6 +144,7 @@ namespace User.Api
                         Permissions.Scopes.Email,
                         Permissions.Scopes.Profile,
                         Permissions.Scopes.Roles,
+                        $"{Permissions.Prefixes.Scope}{Scopes.OfflineAccess}",
                         Requirements.Features.ProofKeyForCodeExchange
                     }
                 });
@@ -164,6 +171,7 @@ namespace User.Api
                         Permissions.Scopes.Email,
                         Permissions.Scopes.Profile,
                         Permissions.Scopes.Roles,
+                        $"{Permissions.Prefixes.Scope}{Scopes.OfflineAccess}",
                         Requirements.Features.ProofKeyForCodeExchange
                     }
                 });
