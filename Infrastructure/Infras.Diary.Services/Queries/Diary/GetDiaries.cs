@@ -19,10 +19,10 @@ namespace Infras.Diary.Services.Queries.Diary
             var queries = new List<Query>();
 
             if (!string.IsNullOrWhiteSpace(Name))
-                queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.Name)), Query = Name! });
+                queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.Name)), Query = Name });
 
             if (!string.IsNullOrWhiteSpace(AuthorId))
-                queries.Add(new TermQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorId)), Value = AuthorId! });
+                queries.Add(new TermQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorId)), Value = AuthorId });
 
             return queries.Count switch
             {

@@ -8,7 +8,7 @@ using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
-    public record CreateDiaryRequest(string Name, string Description, string AuthorId, EDiaryVisibility DiaryVisibility = EDiaryVisibility.Self) : IRequest<long>;
+    public record CreateDiaryRequest(string Name, string Description, string AuthorId, string AuthorName, EDiaryVisibility DiaryVisibility = EDiaryVisibility.Self) : IRequest<long>;
 
     public sealed class CreateDiaryValidator : BaseValidator<CreateDiaryRequest>
     {
@@ -27,7 +27,7 @@ namespace Infras.Diary.Services.Commands.Diary
         public async Task<long> Handle(CreateDiaryRequest request, CancellationToken cancellationToken)
         {
             var id = Guid.NewGuid();
-            var eventData = new EventData(Uuid.NewUuid(), nameof(InitDiary), new InitDiary(id, DateTimeOffset.UtcNow, request.Name, request.Description, request.AuthorId, request.DiaryVisibility).ObjectToBytes());
+            var eventData = new EventData(Uuid.NewUuid(), nameof(InitDiary), new InitDiary(id, DateTimeOffset.UtcNow, request.Name, request.Description, request.AuthorId, request.AuthorName, request.DiaryVisibility).ObjectToBytes());
             var streamKey = DiaryConstants.GetStreamName(id);
             var res = await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.NoStream, [eventData], cancellationToken: cancellationToken);
 

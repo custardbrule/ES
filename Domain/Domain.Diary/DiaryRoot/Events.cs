@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Diary.DiaryRoot
 {
-    public record InitDiary(Guid Id, DateTimeOffset CreatedDate, string Name, string Description, string AuthorId, EDiaryVisibility Visibility);
+    public record InitDiary(Guid Id, DateTimeOffset CreatedDate, string Name, string Description, string AuthorId, string AuthorName, EDiaryVisibility Visibility);
     public record ChangeDiaryVisibility(EDiaryVisibility Visibility);
     public record ChangeDiaryInfo(string Name, string Description);
 
