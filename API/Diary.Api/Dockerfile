@@ -14,8 +14,7 @@ COPY ["Infrastructure/Data/Data.csproj", "Infrastructure/Data/"]
 COPY ["Domain/Domain.Diary/Domain.Diary.csproj", "Domain/Domain.Diary/"]
 COPY ["Shared/CQRS/CQRS.csproj", "Shared/CQRS/"]
 COPY ["Shared/Utilities/Utilities.csproj", "Shared/Utilities/"]
-COPY ["Shared/RequestValidator/RequestValidator.csproj", "Shared/RequestValidator/"]
-COPY ["Shared/DataStore/DataStore.csproj", "Shared/DataStore/"]
+COPY ["Shared/RequestValidatior/RequestValidatior.csproj", "Shared/RequestValidatior/"]
 
 # Restore dependencies (cached unless .csproj files change)
 RUN dotnet restore "API/Diary.Api/Diary.Api.csproj"

@@ -7,12 +7,12 @@ using Utilities;
 
 namespace Infras.Diary.Services.Queries.Diary
 {
-    public record GetDiariesRequest(string? Name, string? AuthorId, int Page = 1, int PageSize = 10) : IRequest<EPagedList<DiaryViewModel>>;
+    public record GetDiariesRequest(string? Name, string? AuthorName, int Page = 1, int PageSize = 10) : IRequest<EPagedList<DiaryViewModel>>;
 
     public class DiaryPageQuery : PageQuery<Domain.Diary.DiaryRoot.Diary>
     {
         public string? Name { get; set; }
-        public string? AuthorId { get; set; }
+        public string? AuthorName { get; set; }
 
         public override Query GetQuery()
         {
@@ -21,8 +21,8 @@ namespace Infras.Diary.Services.Queries.Diary
             if (!string.IsNullOrWhiteSpace(Name))
                 queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.Name)), Query = Name });
 
-            if (!string.IsNullOrWhiteSpace(AuthorId))
-                queries.Add(new TermQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorId)), Value = AuthorId });
+            if (!string.IsNullOrWhiteSpace(AuthorName))
+                queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorName)), Query = AuthorName });
 
             return queries.Count switch
             {
@@ -41,6 +41,7 @@ namespace Infras.Diary.Services.Queries.Diary
             nameof(Domain.Diary.DiaryRoot.Diary.Name),
             nameof(Domain.Diary.DiaryRoot.Diary.Description),
             nameof(Domain.Diary.DiaryRoot.Diary.AuthorId),
+            nameof(Domain.Diary.DiaryRoot.Diary.AuthorName),
             nameof(Domain.Diary.DiaryRoot.Diary.Visibility),
             nameof(Domain.Diary.DiaryRoot.Diary.CreatedDate)
         ];
@@ -65,7 +66,7 @@ namespace Infras.Diary.Services.Queries.Diary
                 Page = page,
                 PageSize = pageSize,
                 Name = request.Name,
-                AuthorId = request.AuthorId
+                AuthorName = request.AuthorName
             };
 
             var searchRequest = query.GetSearchRequest(DiaryConstants.ESIndex);
@@ -74,7 +75,7 @@ namespace Infras.Diary.Services.Queries.Diary
             if (!searchResponse.IsValidResponse)
                 throw new ApplicationException("Failed to retrieve diaries from Elasticsearch.");
 
-            var items = searchResponse.Documents.Select(d => new DiaryViewModel(d.Id, d.Name, d.Description, d.AuthorId, d.Visibility, d.CreatedDate, []));
+            var items = searchResponse.Documents.Select(d => new DiaryViewModel(d.Id, d.Name, d.Description, d.AuthorId, d.AuthorName, d.Visibility, d.CreatedDate, []));
             var totalCount = searchResponse.Total;
 
             return EPagedList<DiaryViewModel>.Create(items, totalCount, page, pageSize);

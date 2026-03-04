@@ -137,6 +137,42 @@ services:
       - es-dev-network
     restart: unless-stopped
 
+  # Diary API
+  diary-api:
+    build:
+      context: .
+      dockerfile: API/Diary.Api/Dockerfile
+    container_name: es-dev-diary-api
+    env_file:
+      - ./configs/dev/.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:${DIARY_API_PORT}
+      - Elasticsearch__ConnectionString=http://elasticsearch:9200
+      - Elasticsearch__Username=${ELASTIC_USERNAME}
+      - Elasticsearch__Password=${ELASTIC_PASSWORD}
+      - KurrentDB=esdb://eventstoredb:${EVENTSTOREDB_PORT}?tls=false
+      - KafkaSettings__ProducerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
+      - KafkaSettings__ConsumerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
+      - ConnectionStrings__QuartzConnection=Server=mssql;Database=${QUARTZ_DB};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
+      - Authentication__Authority=http://user-api:${USER_API_PORT}
+    ports:
+      - "${DIARY_API_PORT}:${DIARY_API_PORT}"
+    depends_on:
+      mssql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eventstoredb:
+        condition: service_healthy
+      user-api:
+        condition: service_started
+    networks:
+      - es-dev-network
+    restart: unless-stopped
+
 networks:
   es-dev-network:
     driver: bridge
