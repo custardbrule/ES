@@ -122,6 +122,7 @@ services:
       - KafkaSettings__ProducerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
       - KafkaSettings__ConsumerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
       - KurrentDB=esdb://eventstoredb:${EVENTSTOREDB_PORT}?tls=false
+      - BaseUrl=http://localhost:${USER_API_PORT}
     ports:
       - "${USER_API_PORT}:${USER_API_PORT}"
     depends_on:

@@ -12,7 +12,7 @@ namespace Utilities
 
         public virtual Query GetQuery() => new MatchAllQuery();
         public virtual SortOptions[]? GetSort() => null;
-        public virtual string[]? GetSourceIncludes() => null;
+        public virtual Fields? GetSourceIncludes() => null;
 
         public SearchRequest<T> GetSearchRequest(Indices indices)
         {
@@ -29,7 +29,7 @@ namespace Utilities
                 request.Sort = sort;
 
             var sourceIncludes = GetSourceIncludes();
-            if (sourceIncludes != null && sourceIncludes.Length > 0)
+            if (sourceIncludes != null)
                 request.SourceIncludes = sourceIncludes;
 
             return request;

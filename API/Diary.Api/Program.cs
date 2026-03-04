@@ -16,7 +16,44 @@ namespace Diary.Api
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            var authority = builder.Configuration["Authentication:Authority"]!;
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("oauth2", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.OAuth2,
+                    Flows = new Microsoft.OpenApi.Models.OpenApiOAuthFlows
+                    {
+                        AuthorizationCode = new Microsoft.OpenApi.Models.OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri($"{authority}/connect/authorize"),
+                            TokenUrl = new Uri($"{authority}/connect/token"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                { "openid", "OpenID" },
+                                { "profile", "Profile" },
+                                { "email", "Email" },
+                                { "roles", "Roles" },
+                                { "offline_access", "Offline Access" }
+                            }
+                        }
+                    }
+                });
+                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "oauth2"
+                            }
+                        },
+                        ["openid", "profile", "email", "roles", "offline_access"]
+                    }
+                });
+            });
             builder.Services.ConfigInfras(builder.Configuration);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -45,7 +82,11 @@ namespace Diary.Api
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(options =>
+                {
+                    options.OAuthClientId("diary-swagger-client");
+                    options.OAuthUsePkce();
+                });
             }
             else
             {

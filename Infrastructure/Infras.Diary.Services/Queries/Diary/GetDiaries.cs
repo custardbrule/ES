@@ -36,15 +36,16 @@ namespace Infras.Diary.Services.Queries.Diary
             new SortOptions() { Field = new FieldSort { Field = Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.CreatedDate), Order = SortOrder.Desc } }
         ];
 
-        public override string[] GetSourceIncludes() => [
-            nameof(Domain.Diary.DiaryRoot.Diary.Id),
-            nameof(Domain.Diary.DiaryRoot.Diary.Name),
-            nameof(Domain.Diary.DiaryRoot.Diary.Description),
-            nameof(Domain.Diary.DiaryRoot.Diary.AuthorId),
-            nameof(Domain.Diary.DiaryRoot.Diary.AuthorName),
-            nameof(Domain.Diary.DiaryRoot.Diary.Visibility),
-            nameof(Domain.Diary.DiaryRoot.Diary.CreatedDate)
-        ];
+        public override Fields GetSourceIncludes() => new Field[]
+        {
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.Id),
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.Name),
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.Description),
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.AuthorId),
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.AuthorName),
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.Visibility),
+            Infer.Field<Domain.Diary.DiaryRoot.Diary>(d => d.CreatedDate)
+        };
     }
 
     public class GetDiariesHandler : IHandler<GetDiariesRequest, EPagedList<DiaryViewModel>>

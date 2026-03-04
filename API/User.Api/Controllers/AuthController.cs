@@ -187,9 +187,8 @@ namespace User.Api.Controllers
                     nameType: Claims.Name,
                     roleType: Claims.Role);
 
-                // Override the user claims present in the principal if they changed since the authorization code was issued
-                identity.AddClaim(new Claim(Claims.Subject, user.Id.ToString()).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
-                identity.AddClaim(new Claim(Claims.Name, user.Account).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
+                identity.FindFirst(Claims.Subject)?.SetDestinations(Destinations.AccessToken, Destinations.IdentityToken);
+                identity.FindFirst(Claims.Name)?.SetDestinations(Destinations.AccessToken, Destinations.IdentityToken);
 
                 principal = new ClaimsPrincipal(identity);
 

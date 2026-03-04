@@ -10,6 +10,7 @@ export interface Diary {
   name: string;
   description: string;
   authorId: string;
+  authorName: string;
   visibility: EDiaryVisibility;
 }
 

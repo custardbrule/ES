@@ -1,9 +1,8 @@
 using Infras.User.Services;
+using Infras.User.Services.Constants;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using User.Api.Middleware;
-using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace User.Api
 {
@@ -17,7 +16,44 @@ namespace User.Api
             builder.Services.AddControllersWithViews();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            var baseUrl = builder.Configuration["BaseUrl"]!;
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("oauth2", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.OAuth2,
+                    Flows = new Microsoft.OpenApi.Models.OpenApiOAuthFlows
+                    {
+                        AuthorizationCode = new Microsoft.OpenApi.Models.OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri($"{baseUrl}{AppOpenIddictConstants.Endpoints.Authorize}"),
+                            TokenUrl = new Uri($"{baseUrl}{AppOpenIddictConstants.Endpoints.Token}"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                { "openid", "OpenID" },
+                                { "profile", "Profile" },
+                                { "email", "Email" },
+                                { "roles", "Roles" },
+                                { "offline_access", "Offline Access" }
+                            }
+                        }
+                    }
+                });
+                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "oauth2"
+                            }
+                        },
+                        ["openid", "profile", "email", "roles", "offline_access"]
+                    }
+                });
+            });
 
             // Configure infrastructure services (includes OpenIddict)
             builder.Services.ConfigInfras(builder.Configuration);
@@ -40,10 +76,9 @@ namespace User.Api
 
             var app = builder.Build();
 
-            // Seed OpenIddict clients
             using (var scope = app.Services.CreateScope())
             {
-                await SeedOpenIddictData(scope.ServiceProvider);
+                await OpenIddictSeeder.SeedAsync(scope.ServiceProvider);
             }
 
             // Configure the HTTP request pipeline.
@@ -52,7 +87,12 @@ namespace User.Api
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(options =>
+                {
+                    options.OAuthClientId("swagger-client");
+                    options.OAuthClientSecret("swagger-secret");
+                    options.OAuthUsePkce();
+                });
             }
             else
             {
@@ -79,127 +119,5 @@ namespace User.Api
             app.Run();
         }
 
-        private static async Task SeedOpenIddictData(IServiceProvider serviceProvider)
-        {
-            var manager = serviceProvider.GetRequiredService<IOpenIddictApplicationManager>();
-            var scopeManager = serviceProvider.GetRequiredService<IOpenIddictScopeManager>();
-            var context = serviceProvider.GetRequiredService<UserDbContext>();
-
-            // Apply pending migrations
-            await context.Database.MigrateAsync();
-
-            // Seed scopes if not exist
-            if (await scopeManager.FindByNameAsync(Scopes.OpenId) == null)
-            {
-                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
-                {
-                    Name = Scopes.OpenId,
-                    DisplayName = "OpenID"
-                });
-
-                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
-                {
-                    Name = Scopes.Email,
-                    DisplayName = "Email"
-                });
-
-                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
-                {
-                    Name = Scopes.Profile,
-                    DisplayName = "Profile"
-                });
-
-                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
-                {
-                    Name = Scopes.Roles,
-                    DisplayName = "Roles"
-                });
-
-                await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
-                {
-                    Name = Scopes.OfflineAccess,
-                    DisplayName = "Offline Access"
-                });
-            }
-
-            // Check if client already exists
-            if (await manager.FindByClientIdAsync("ums-client") == null)
-            {
-                await manager.CreateAsync(new OpenIddictApplicationDescriptor
-                {
-                    ClientId = "ums-client",
-                    ClientSecret = "ums-client-secret",
-                    DisplayName = "UMS Client Application",
-                    RedirectUris = { new Uri("https://localhost:7001/signin-oidc"), new Uri("http://localhost:5173/callback") },
-                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("https://localhost:5173/signout-callback-oidc") },
-                    Permissions =
-                    {
-                        Permissions.Endpoints.Authorization,
-                        Permissions.Endpoints.Token,
-                        Permissions.Endpoints.Logout,
-                        Permissions.GrantTypes.AuthorizationCode,
-                        Permissions.GrantTypes.RefreshToken,
-                        Permissions.ResponseTypes.Code,
-                        $"{Permissions.Prefixes.Scope}{Scopes.OpenId}",
-                        Permissions.Scopes.Email,
-                        Permissions.Scopes.Profile,
-                        Permissions.Scopes.Roles,
-                        $"{Permissions.Prefixes.Scope}{Scopes.OfflineAccess}",
-                        Requirements.Features.ProofKeyForCodeExchange
-                    }
-                });
-            }
-
-            if (await manager.FindByClientIdAsync("diary-client") == null)
-            {
-                await manager.CreateAsync(new OpenIddictApplicationDescriptor
-                {
-                    ClientId = "diary-client",
-                    ClientType = ClientTypes.Public,
-                    DisplayName = "Diary Client Application",
-                    RedirectUris = { new Uri("https://localhost:7001/signin-oidc"), new Uri("http://localhost:4200/callback") },
-                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("https://localhost:4200/signout-callback-oidc") },
-                    Permissions =
-                    {
-                        Permissions.Endpoints.Authorization,
-                        Permissions.Endpoints.Token,
-                        Permissions.Endpoints.Logout,
-                        Permissions.GrantTypes.AuthorizationCode,
-                        Permissions.GrantTypes.RefreshToken,
-                        Permissions.ResponseTypes.Code,
-                        $"{Permissions.Prefixes.Scope}{Scopes.OpenId}",
-                        Permissions.Scopes.Email,
-                        Permissions.Scopes.Profile,
-                        Permissions.Scopes.Roles,
-                        $"{Permissions.Prefixes.Scope}{Scopes.OfflineAccess}",
-                        Requirements.Features.ProofKeyForCodeExchange
-                    }
-                });
-            }
-
-            // Add a Swagger/API client
-            if (await manager.FindByClientIdAsync("swagger-client") == null)
-            {
-                await manager.CreateAsync(new OpenIddictApplicationDescriptor
-                {
-                    ClientId = "swagger-client",
-                    ClientSecret = "swagger-secret",
-                    DisplayName = "Swagger API Client",
-                    RedirectUris = { new Uri("http://localhost:5100/swagger/oauth2-redirect.html") },
-                    Permissions =
-                    {
-                        Permissions.Endpoints.Authorization,
-                        Permissions.Endpoints.Token,
-                        Permissions.GrantTypes.AuthorizationCode,
-                        Permissions.GrantTypes.ClientCredentials,
-                        Permissions.ResponseTypes.Code,
-                        $"{Permissions.Prefixes.Scope}{Scopes.OpenId}",
-                        Permissions.Scopes.Email,
-                        Permissions.Scopes.Profile,
-                        Requirements.Features.ProofKeyForCodeExchange
-                    }
-                });
-            }
-        }
     }
 }

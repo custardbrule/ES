@@ -71,6 +71,7 @@ export class HomePageComponent {
       authorName: this.authService.getUserInfo()?.name,
       authorId: this.authService.getUserInfo()?.sub,
     };
+
     this.diaryService.addDiary(value).subscribe({
       next: () => {
         this.diaryForm.reset({

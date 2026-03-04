@@ -58,7 +58,8 @@ export class AuthService {
   }
 
   login(returnUrl: string = this.router.url): void {
-    sessionStorage.setItem(AuthService.RETURN_URL_KEY, returnUrl);
+    const safeReturnUrl = returnUrl.startsWith('/callback') ? '/' : returnUrl;
+    sessionStorage.setItem(AuthService.RETURN_URL_KEY, safeReturnUrl);
     this.oauthService.initCodeFlow();
   }
 
