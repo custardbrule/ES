@@ -68,6 +68,7 @@ export class HomePageComponent {
 
     const value: CreateDiaryRequest = {
       ...(this.diaryForm.value as Omit<CreateDiaryRequest, 'authorId'>),
+      authorName: this.authService.getUserInfo()?.name,
       authorId: this.authService.getUserInfo()?.sub,
     };
     this.diaryService.addDiary(value).subscribe({

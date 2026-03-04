@@ -31,5 +31,6 @@ export interface CreateDiaryRequest {
   name: string;
   description?: string;
   authorId?: string;
+  authorName?: string;
   diaryVisibility: EDiaryVisibility;
 }

@@ -112,8 +112,8 @@ namespace User.Api.Controllers
                 nameType: Claims.Name,
                 roleType: Claims.Role);
 
-            identity.AddClaim(Claims.Subject, user.Id.ToString());
-            identity.AddClaim(Claims.Name, user.Account);
+            identity.AddClaim(new Claim(Claims.Subject, user.Id.ToString()).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
+            identity.AddClaim(new Claim(Claims.Name, user.Account).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
 
             // Add user scopes as claims
             var userScopes = await _context.UserScopes
@@ -123,7 +123,7 @@ namespace User.Api.Controllers
 
             foreach (var scope in userScopes)
             {
-                identity.AddClaim(Claims.Role, scope);
+                identity.AddClaim(new Claim(Claims.Role, scope).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
             }
 
             var principal = new ClaimsPrincipal(identity);
@@ -188,8 +188,8 @@ namespace User.Api.Controllers
                     roleType: Claims.Role);
 
                 // Override the user claims present in the principal if they changed since the authorization code was issued
-                identity.SetClaim(Claims.Subject, user.Id.ToString())
-                        .SetClaim(Claims.Name, user.Account);
+                identity.AddClaim(new Claim(Claims.Subject, user.Id.ToString()).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
+                identity.AddClaim(new Claim(Claims.Name, user.Account).SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
 
                 principal = new ClaimsPrincipal(identity);
 

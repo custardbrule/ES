@@ -5,6 +5,7 @@ import { environment } from '@environments/environment';
 
 export interface UserInfo {
   sub: string;
+  name: string;
 }
 
 @Injectable({
