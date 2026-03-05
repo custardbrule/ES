@@ -2,13 +2,14 @@ using Confluent.Kafka;
 using CQRS;
 using Domain.Diary.DiaryRoot;
 using Infras.Diary.Services.Kafka;
+using Infras.Diary.Services.Queries;
 using KurrentDB.Client;
 using RequestValidatior;
 using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
-    public record CreateDiaryRequest(string Name, string Description, string AuthorId, string AuthorName, EDiaryVisibility DiaryVisibility = EDiaryVisibility.Self) : IRequest<long>;
+    public record CreateDiaryRequest(string Name, string Description, string AuthorId, string AuthorName, EDiaryVisibility DiaryVisibility = EDiaryVisibility.Self) : IRequest<DiaryViewModel>;
 
     public sealed class CreateDiaryValidator : BaseValidator<CreateDiaryRequest>
     {
@@ -22,17 +23,19 @@ namespace Infras.Diary.Services.Commands.Diary
     public class CreateDiaryHandler(
         KurrentDBClient kurrentDBClient,
         IProducer<string, SyncMessage> producer)
-        : IHandler<CreateDiaryRequest, long>
+        : IHandler<CreateDiaryRequest, DiaryViewModel>
     {
-        public async Task<long> Handle(CreateDiaryRequest request, CancellationToken cancellationToken)
+        public async Task<DiaryViewModel> Handle(CreateDiaryRequest request, CancellationToken cancellationToken)
         {
             var id = Guid.NewGuid();
-            var eventData = new EventData(Uuid.NewUuid(), nameof(InitDiary), new InitDiary(id, DateTimeOffset.UtcNow, request.Name, request.Description, request.AuthorId, request.AuthorName, request.DiaryVisibility).ObjectToBytes());
+            var createdDate = DateTimeOffset.UtcNow;
+            var initEvent = new InitDiary(id, createdDate, request.Name, request.Description, request.AuthorId, request.AuthorName, request.DiaryVisibility);
+            var eventData = new EventData(Uuid.NewUuid(), nameof(InitDiary), initEvent.ObjectToBytes());
             var streamKey = DiaryConstants.GetStreamName(id);
-            var res = await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.NoStream, [eventData], cancellationToken: cancellationToken);
+            await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.NoStream, [eventData], cancellationToken: cancellationToken);
 
             producer.Produce(DiaryTopics.SyncDiary, new Message<string, SyncMessage> { Key = streamKey, Value = new SyncMessage(streamKey) });
-            return res.NextExpectedStreamState.ToInt64();
+            return new DiaryViewModel(id, initEvent.Name, initEvent.Description, initEvent.AuthorId, initEvent.AuthorName, initEvent.Visibility, createdDate, []);
         }
     }
 }

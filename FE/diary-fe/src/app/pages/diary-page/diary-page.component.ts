@@ -1,20 +1,36 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  OnInit,
-} from '@angular/core';
-import { ReactiveFormsModule, FormGroup } from '@angular/forms';
-import { SvgIconComponent } from "@src/app/components/svg-icon/svg-icon.component";
-import { DiaryMockService, DiaryDay } from '@src/app/services/diary-mock.service';
-import { ModalComponent } from "@src/app/components/modal/modal.component";
-import { CheckboxComponent } from "@src/app/components/checkbox/checkbox.component";
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { SvgIconComponent } from '@src/app/components/svg-icon/svg-icon.component';
+import { ModalComponent } from '@src/app/components/modal/modal.component';
+import { CheckboxComponent } from '@src/app/components/checkbox/checkbox.component';
 import { FormBuilderService } from '@src/app/services/form-builder.service';
+import { DiaryService } from '@src/app/services/diary.service';
+import { Diary } from '@src/app/models/diary.models';
 import * as rules from '@src/shared/utils/validator-rules';
 
 interface AddDiarySectionRequest {
   timeZoneId: string;
   detail: string;
   isPinned: boolean;
+}
+
+interface DiarySection {
+  time: string;
+  content: string;
+  isPinned: boolean;
+}
+
+interface DiaryDay {
+  date: string;
+  isExpanded: boolean;
+  isLoading: boolean;
+  sections: DiarySection[];
+}
+
+interface DiaryState extends Diary {
+  days: DiaryDay[];
 }
 
 @Component({
@@ -24,12 +40,21 @@ interface AddDiarySectionRequest {
   styleUrl: './diary-page.component.scss',
 })
 export class DiaryPageComponent implements OnInit {
-  days: DiaryDay[] = [];
   isDescriptionExpanded = false;
+  diary: DiaryState | null = null;
 
   sectionForm!: ReturnType<typeof this.formService.create<AddDiarySectionRequest>>;
 
-  constructor(private diaryService: DiaryMockService, private formService: FormBuilderService) {}
+  constructor(
+    private formService: FormBuilderService,
+    private diaryService: DiaryService,
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {
+    const nav = this.router.getCurrentNavigation();
+    const state = nav?.extras?.state?.['diary'] as Diary | null ?? null;
+    if (state) this.diary = { ...state, days: [] };
+  }
 
   ngOnInit() {
     this.sectionForm = this.formService.create<AddDiarySectionRequest>(b => {
@@ -41,13 +66,26 @@ export class DiaryPageComponent implements OnInit {
   }
 
   loadDays() {
-    this.diaryService.getDays().subscribe({
-      next: (days) => {
-        this.days = days;
+    const id = this.route.snapshot.paramMap.get('id')!;
+    this.diaryService.getDiaryById(id).subscribe({
+      next: (vm) => {
+        this.diary = {
+          ...vm,
+          days: vm.days.map(d => ({
+            date: d.date,
+            isExpanded: false,
+            isLoading: false,
+            sections: d.sections.map(s => ({
+              time: s.createdAt,
+              content: s.detail,
+              isPinned: s.isPinned,
+            })),
+          })),
+        };
       },
-      error: (error) => {
-        console.error('Error loading days:', error);
-      }
+      error: (err) => {
+        console.error('Error loading diary:', err);
+      },
     });
   }
 
@@ -60,25 +98,6 @@ export class DiaryPageComponent implements OnInit {
   }
 
   toggleDay(day: DiaryDay) {
-    if (day.isExpanded) {
-      day.isExpanded = false;
-    } else {
-      if (day.sections.length === 0) {
-        day.isLoading = true;
-        this.diaryService.getSectionsForDay(day.id).subscribe({
-          next: (sections) => {
-            day.sections = sections;
-            day.isExpanded = true;
-            day.isLoading = false;
-          },
-          error: (error) => {
-            console.error('Error loading sections:', error);
-            day.isLoading = false;
-          }
-        });
-      } else {
-        day.isExpanded = true;
-      }
-    }
+    day.isExpanded = !day.isExpanded;
   }
 }

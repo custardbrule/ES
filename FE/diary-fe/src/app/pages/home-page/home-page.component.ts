@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { KeyValuePipe } from '@angular/common';
@@ -33,6 +33,7 @@ export class HomePageComponent {
   private diaryService = inject(DiaryService);
   private formService = inject(FormBuilderService);
   private authService = inject(AuthService);
+  private router = inject(Router);
   navigator = navigator;
   EDiaryVisibility = EDiaryVisibility;
 
@@ -73,14 +74,11 @@ export class HomePageComponent {
     };
 
     this.diaryService.addDiary(value).subscribe({
-      next: () => {
-        this.diaryForm.reset({
-          name: '',
-          description: '',
-          diaryVisibility: EDiaryVisibility.Public,
-        });
+      next: (diary) => {
         modal.close();
-        this.refresh$.next();
+        this.router.navigate([navigator.collection.toRoute({ id: diary.id })], {
+          state: { diary },
+        });
       },
       error: (err: HttpErrorResponse) => {
         console.error('Failed to add diary:', err);

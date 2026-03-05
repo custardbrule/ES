@@ -28,6 +28,22 @@ export interface GetDiariesResponse {
   pageSize: number;
 }
 
+export interface DiarySectionViewModel {
+  id: string;
+  detail: string;
+  isPinned: boolean;
+  createdAt: string;
+}
+
+export interface DiaryDayViewModel {
+  date: string;
+  sections: DiarySectionViewModel[];
+}
+
+export interface DiaryViewModel extends Diary {
+  days: DiaryDayViewModel[];
+}
+
 export interface CreateDiaryRequest {
   name: string;
   description?: string;
