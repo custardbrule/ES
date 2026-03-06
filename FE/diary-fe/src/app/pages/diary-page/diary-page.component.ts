@@ -62,7 +62,7 @@ export class DiaryPageComponent implements OnInit {
       b.for('detail', '').add(rules.required, 'Write something ?');
       b.for('isPinned', false);
     });
-    this.loadDays();
+    if (!this.diary) this.loadDays();
   }
 
   loadDays() {

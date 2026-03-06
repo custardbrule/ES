@@ -19,7 +19,7 @@ namespace Infras.Diary.Services.Queries.Diary
 
         public async Task<DailyDiaryViewModel> Handle(GetDailyDiaryByIdRequest request, CancellationToken cancellationToken)
         {
-            var response = await _elasticsearchContext.Client.GetAsync<DailyDiaryViewModel>(DailyDiaryConstants.ESIndex, request.Id, des => des.SourceIncludes(f => f.DiaryId, f => f.CreatedDate, f => f.Sections), cancellationToken);
+            var response = await _elasticsearchContext.Client.GetAsync<DailyDiaryViewModel>(DailyDiaryConstants.ESIndex, DailyDiaryConstants.GetId(request.Id), des => des.SourceIncludes(f => f.DiaryId, f => f.CreatedDate, f => f.Sections), cancellationToken);
 
             if (!response.IsValidResponse) throw new ApplicationException();
             if (!response.Found) throw new BussinessException("not_found", 400, "Item not found.");
