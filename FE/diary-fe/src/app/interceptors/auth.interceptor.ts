@@ -1,10 +1,15 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { environment } from '@environments/environment';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { from, switchMap } from 'rxjs';
+import { catchError, from, switchMap } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const oauthService = inject(OAuthService);
+
+  if (req.url.startsWith(environment.oidc.issuer)) {
+    return next(req);
+  }
 
   const addToken = (token: string) =>
     next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
@@ -16,6 +21,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (oauthService.getRefreshToken()) {
     return from(oauthService.refreshToken()).pipe(
       switchMap(() => addToken(oauthService.getAccessToken())),
+      catchError(() => next(req)),
     );
   }
 

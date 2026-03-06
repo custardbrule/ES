@@ -1,11 +1,22 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Core.Bulk;
 using Elastic.Clients.Elasticsearch.QueryDsl;
+using Elastic.Clients.Elasticsearch.Serialization;
 using Elastic.Transport;
 
 namespace Data
 {
+    public class GuidNFormatConverter : JsonConverter<Guid>
+    {
+        public override Guid Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            => Guid.Parse(reader.GetString()!);
+        public override void Write(Utf8JsonWriter writer, Guid value, JsonSerializerOptions options)
+            => writer.WriteStringValue(value.ToString("N"));
+    }
+
     public class ElasticsearchOptions
     {
         public const string SectionName = "Elasticsearch";
@@ -43,16 +54,12 @@ namespace Data
         {
             ElasticsearchClientSettings settings;
 
-            // Configure connection
-            if (Nodes?.Length > 0)
-            {
-                var uris = Nodes.Select(node => new Uri(node)).ToArray();
-                settings = new ElasticsearchClientSettings(new StaticNodePool(uris));
-            }
-            else
-            {
-                settings = new ElasticsearchClientSettings(new Uri(ConnectionString));
-            }
+            var nodePool = Nodes?.Length > 0
+                ? (NodePool)new StaticNodePool(Nodes.Select(n => new Uri(n)))
+                : new SingleNodePool(new Uri(ConnectionString));
+
+            settings = new ElasticsearchClientSettings(nodePool, sourceSerializer: (_, s) =>
+                new DefaultSourceSerializer(s, opt => opt.Converters.Add(new GuidNFormatConverter())));
 
             // Authentication
             if (!string.IsNullOrEmpty(ApiKey))

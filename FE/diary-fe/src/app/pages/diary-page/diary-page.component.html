@@ -59,7 +59,7 @@
             class="flex flex-col gap-4 text-primary text-sm [&:not(:last-child)]:pb-4 [&:not(:last-child)]:border-b"
           >
             <div class="flex gap-2 text-md text-secondary items-center">
-              <span>{{ day.date }}</span>
+              <span>{{ day.date | date: "dd/MMM/yyyy" }}</span>
               <button
                 type="button"
                 class="bg-bg-yellow-primary rounded-md hover:brightness-125 active:scale-95 transition-transform"
@@ -89,8 +89,8 @@
               @for (section of day.sections; track $index) {
                 <div class="flex flex-col gap-2 md:gap-4 md:px-4">
                   <div class="flex items-center gap-2">
-                    <span class="font-semibold text-secondary">{{
-                      section.time
+                    <span class="font-semibold text-secondary text-md">{{
+                      section.time | date: "HH:mm"
                     }}</span>
                     @if (section.isPinned) {
                       <app-svg-icon name="pin-24"></app-svg-icon>

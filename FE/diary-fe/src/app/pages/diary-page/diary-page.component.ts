@@ -86,7 +86,7 @@ export class DiaryPageComponent implements OnInit {
             isExpanded: false,
             isLoading: false,
             sections: d.sections.map((s) => ({
-              time: s.createdAt,
+              time: s.createdDate,
               content: s.detail,
               isPinned: s.isPinned,
             })),

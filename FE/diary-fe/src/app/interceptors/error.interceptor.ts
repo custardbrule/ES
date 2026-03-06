@@ -10,7 +10,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       switch (error.status) {
         case 401:
-          authService.logout();
+          // authService.logout();
           break;
         // case 403:
         //   router.navigate(['/forbidden']);

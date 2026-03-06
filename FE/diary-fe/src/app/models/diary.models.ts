@@ -32,7 +32,7 @@ export interface DiarySectionViewModel {
   id: string;
   detail: string;
   isPinned: boolean;
-  createdAt: string;
+  createdDate: string;
 }
 
 export interface DiaryDayViewModel {
