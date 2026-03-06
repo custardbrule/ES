@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { SvgIconComponent } from '@src/app/components/svg-icon/svg-icon.component';
 import { BaseDropdownComponent } from '@src/app/components/dropdowns/base-dropdown/base-dropdown.component';
 import { BaseSearchBarComponent } from '@src/app/components/search/base-search-bar/base-search-bar.component';
@@ -9,6 +9,7 @@ import { AuthService } from '@src/app/services/auth.service';
   selector: 'app-layout',
   imports: [
     RouterOutlet,
+    RouterLink,
     SvgIconComponent,
     BaseDropdownComponent,
     BaseSearchBarComponent,

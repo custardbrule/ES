@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import {
+  AddSectionRequest,
   CreateDiaryRequest,
   Diary,
   DiaryViewModel,
@@ -34,10 +35,14 @@ export class DiaryService {
   }
 
   addDiary(body: CreateDiaryRequest): Observable<Diary> {
-    return this.http.post<Diary>(`${this.baseUrl}/AddDiary`, body);
+    return this.http.post<Diary>(`${this.baseUrl}`, body);
   }
 
   getDiaryById(id: string): Observable<DiaryViewModel> {
     return this.http.get<DiaryViewModel>(`${this.baseUrl}/${id}`);
+  }
+
+  addSection(body: AddSectionRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/section`, body);
   }
 }

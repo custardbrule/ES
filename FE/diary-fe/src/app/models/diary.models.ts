@@ -41,7 +41,14 @@ export interface DiaryDayViewModel {
 }
 
 export interface DiaryViewModel extends Diary {
-  days: DiaryDayViewModel[];
+  dailyDiaries: DiaryDayViewModel[];
+}
+
+export interface AddSectionRequest {
+  diaryId: string;
+  timeZoneId: string;
+  detail: string;
+  isPinned: boolean;
 }
 
 export interface CreateDiaryRequest {

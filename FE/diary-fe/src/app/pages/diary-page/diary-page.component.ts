@@ -7,7 +7,7 @@ import { ModalComponent } from '@src/app/components/modal/modal.component';
 import { CheckboxComponent } from '@src/app/components/checkbox/checkbox.component';
 import { FormBuilderService } from '@src/app/services/form-builder.service';
 import { DiaryService } from '@src/app/services/diary.service';
-import { Diary } from '@src/app/models/diary.models';
+import { AddSectionRequest, Diary } from '@src/app/models/diary.models';
 import * as rules from '@src/shared/utils/validator-rules';
 
 interface AddDiarySectionRequest {
@@ -35,7 +35,13 @@ interface DiaryState extends Diary {
 
 @Component({
   selector: 'app-diary-page',
-  imports: [SvgIconComponent, CommonModule, ModalComponent, ReactiveFormsModule, CheckboxComponent],
+  imports: [
+    SvgIconComponent,
+    CommonModule,
+    ModalComponent,
+    ReactiveFormsModule,
+    CheckboxComponent,
+  ],
   templateUrl: './diary-page.component.html',
   styleUrl: './diary-page.component.scss',
 })
@@ -43,7 +49,9 @@ export class DiaryPageComponent implements OnInit {
   isDescriptionExpanded = false;
   diary: DiaryState | null = null;
 
-  sectionForm!: ReturnType<typeof this.formService.create<AddDiarySectionRequest>>;
+  sectionForm!: ReturnType<
+    typeof this.formService.create<AddDiarySectionRequest>
+  >;
 
   constructor(
     private formService: FormBuilderService,
@@ -52,16 +60,18 @@ export class DiaryPageComponent implements OnInit {
     private router: Router,
   ) {
     const nav = this.router.getCurrentNavigation();
-    const state = nav?.extras?.state?.['diary'] as Diary | null ?? null;
+    const state = (nav?.extras?.state?.['diary'] as Diary | null) ?? null;
     if (state) this.diary = { ...state, days: [] };
   }
 
   ngOnInit() {
-    this.sectionForm = this.formService.create<AddDiarySectionRequest>(b => {
+    this.sectionForm = this.formService.create<AddDiarySectionRequest>((b) => {
       b.for('timeZoneId', Intl.DateTimeFormat().resolvedOptions().timeZone);
       b.for('detail', '').add(rules.required, 'Write something ?');
       b.for('isPinned', false);
     });
+    console.log(this.diary);
+
     if (!this.diary) this.loadDays();
   }
 
@@ -71,17 +81,18 @@ export class DiaryPageComponent implements OnInit {
       next: (vm) => {
         this.diary = {
           ...vm,
-          days: vm.days.map(d => ({
+          days: vm.dailyDiaries.map((d) => ({
             date: d.date,
             isExpanded: false,
             isLoading: false,
-            sections: d.sections.map(s => ({
+            sections: d.sections.map((s) => ({
               time: s.createdAt,
               content: s.detail,
               isPinned: s.isPinned,
             })),
           })),
         };
+        console.log(this.diary);
       },
       error: (err) => {
         console.error('Error loading diary:', err);
@@ -90,11 +101,26 @@ export class DiaryPageComponent implements OnInit {
   }
 
   onSubmitSection(modal: ModalComponent) {
-    if (this.sectionForm.invalid) return;
-    console.log(this.sectionForm.value);
-    // TODO: call API
-    this.sectionForm.reset({ timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone, detail: '', isPinned: false });
-    modal.close();
+    if (this.sectionForm.invalid || !this.diary) return;
+
+    const body: AddSectionRequest = {
+      diaryId: this.diary.id,
+      ...(this.sectionForm.value as Omit<AddSectionRequest, 'diaryId'>),
+    };
+
+    this.diaryService.addSection(body).subscribe({
+      next: () => {
+        this.sectionForm.reset({
+          timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          detail: '',
+          isPinned: false,
+        });
+        modal.close();
+      },
+      error: (err) => {
+        console.error('Failed to add section:', err);
+      },
+    });
   }
 
   toggleDay(day: DiaryDay) {

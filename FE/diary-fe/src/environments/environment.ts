@@ -4,6 +4,6 @@ export const environment = {
   oidc: {
     issuer: 'http://localhost:5100/',
     clientId: 'diary-client',
-    scope: 'openid profile',
+    scope: 'openid profile offline_access',
   },
 };
