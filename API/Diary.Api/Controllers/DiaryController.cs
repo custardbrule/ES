@@ -35,10 +35,10 @@ namespace Diary.Api.Controllers
         public async Task<IActionResult> AddDiary([FromBody] CreateDiaryRequest request) => Ok(await _publisher.Send<CreateDiaryRequest, DiaryViewModel>(request));
 
         [HttpPost("section", Name = "Add Section")]
-        public async Task<IActionResult> AddSection([FromBody] AddDiarySectionRequest request) => Ok(await _publisher.Send<AddDiarySectionRequest, long>(request));
+        public async Task<IActionResult> AddSection([FromBody] AddDiarySectionRequest request) => Ok(await _publisher.Send<AddDiarySectionRequest, DiarySectionViewModel>(request));
 
         [HttpPost("section/day", Name = "Add Section To Day")]
-        public async Task<IActionResult> AddSectionToDay([FromBody] AddSectionToDayRequest request) => Ok(await _publisher.Send<AddSectionToDayRequest, long>(request));
+        public async Task<IActionResult> AddSectionToDay([FromBody] AddSectionToDayRequest request) => Ok(await _publisher.Send<AddSectionToDayRequest, DiarySectionViewModel>(request));
 
         [HttpDelete("section", Name = "Remove Section")]
         public async Task<IActionResult> RemoveSection([FromBody] RemoveDiarySectionRequest request) => Ok(await _publisher.Send<RemoveDiarySectionRequest, long>(request));

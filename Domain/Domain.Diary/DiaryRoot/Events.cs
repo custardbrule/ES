@@ -11,7 +11,7 @@ namespace Domain.Diary.DiaryRoot
     public record ChangeDiaryInfo(string Name, string Description);
 
     public record InitDailyDiary(Guid Id, Guid DiaryId, string TimeZoneId, DateTimeOffset Date, DateTimeOffset CreatedDate);
-    public record AddSection(string Detail, bool IsPinned);
+    public record AddSection(Guid SectionId, string Detail, bool IsPinned, DateTimeOffset EventTime);
     public record RemoveSection(Guid Id);
     public record PinSection(Guid Id, bool IsPinned);
 }

@@ -19,7 +19,7 @@ namespace Domain.Diary.DiaryRoot
             _ => this,
         };
         private DailyDiary Apply(InitDailyDiary init) => this with { Id = init.Id, DiaryId = init.DiaryId, TimeZoneId = init.TimeZoneId, Date = init.Date, CreatedDate = init.CreatedDate };
-        private DailyDiary Apply(AddSection addSection) => this with { Sections = [.. Sections, DiarySection.Init(Id, addSection.Detail, addSection.IsPinned)] };
+        private DailyDiary Apply(AddSection addSection) => this with { Sections = [.. Sections, DiarySection.Init(Id, addSection.Detail, addSection.IsPinned, addSection.EventTime) with { Id = addSection.SectionId }] };
         private DailyDiary Apply(RemoveSection removeSection) => this with { Sections = [.. Sections.Where(v => v.Id != removeSection.Id)] };
         private DailyDiary Apply(PinSection pinSection) => this with { Sections = [.. Sections.Select(s => s.Id == pinSection.Id ? s with { IsPinned = pinSection.IsPinned } : s)] };
     }
