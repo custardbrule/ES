@@ -9,7 +9,7 @@ using Uuid = KurrentDB.Client.Uuid;
 
 namespace Infras.Diary.Services.Commands.Diary
 {
-    public record AddSectionToDayRequest(Guid DiaryId, DateOnly Date, string Detail, bool IsPinned, DateTimeOffset EventTime) : IRequest<DiarySectionViewModel>;
+    public record AddSectionToDayRequest(Guid DiaryId, DateTimeOffset Date, string Detail, bool IsPinned, DateTimeOffset EventTime) : IRequest<DiarySectionViewModel>;
 
     public sealed class AddSectionToDayValidator : BaseValidator<AddSectionToDayRequest>
     {
@@ -27,13 +27,22 @@ namespace Infras.Diary.Services.Commands.Diary
     {
         public async Task<DiarySectionViewModel> Handle(AddSectionToDayRequest request, CancellationToken cancellationToken)
         {
-            var streamKey = DailyDiaryConstants.GetStreamName(request.DiaryId, request.Date);
+            var streamKey = DailyDiaryConstants.GetStreamName(request.DiaryId, DateOnly.FromDateTime(request.Date.DateTime));
             var sectionId = Guid.NewGuid();
-            var eventData = new EventData(Uuid.NewUuid(), nameof(AddSection), new AddSection(sectionId, request.Detail, request.IsPinned, request.EventTime).ObjectToBytes());
-            await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.StreamExists, [eventData], cancellationToken: cancellationToken);
+            var sectionEvent = new EventData(Uuid.NewUuid(), nameof(AddSection), new AddSection(sectionId, request.Detail, request.IsPinned, request.EventTime).ObjectToBytes());
+
+            try
+            {
+                await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.StreamExists, [sectionEvent], cancellationToken: cancellationToken);
+            }
+            catch (WrongExpectedVersionException)
+            {
+                var initEvent = new EventData(Uuid.NewUuid(), nameof(InitDailyDiary), new InitDailyDiary(Guid.NewGuid(), request.DiaryId, string.Empty, request.Date, DateTimeOffset.UtcNow).ObjectToBytes());
+                await kurrentDBClient.AppendToStreamAsync(streamKey, StreamState.NoStream, [initEvent, sectionEvent], cancellationToken: cancellationToken);
+            }
 
             producer.Produce(DiaryTopics.SyncDailyDiary, new Message<string, SyncMessage> { Key = streamKey, Value = new SyncMessage(streamKey) });
-            return new DiarySectionViewModel(sectionId, request.DiaryId, request.Detail, request.IsPinned, request.EventTime, DateTimeOffset.UtcNow);
+            return new DiarySectionViewModel(sectionId, Guid.Empty, request.Detail, request.IsPinned, request.EventTime, DateTimeOffset.UtcNow);
         }
     }
 }

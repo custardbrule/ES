@@ -7,11 +7,18 @@ import { ModalComponent } from '@src/app/components/modal/modal.component';
 import { CheckboxComponent } from '@src/app/components/checkbox/checkbox.component';
 import { FormBuilderService } from '@src/app/services/form-builder.service';
 import { DiaryService } from '@src/app/services/diary.service';
-import { AddSectionRequest, Diary } from '@src/app/models/diary.models';
+import { AddSectionByDayRequest, AddSectionRequest, Diary } from '@src/app/models/diary.models';
 import * as rules from '@src/shared/utils/validator-rules';
 
 interface AddDiarySectionRequest {
   timeZoneId: string;
+  detail: string;
+  isPinned: boolean;
+}
+
+interface AddDiarySectionByDayRequest {
+  date: string;
+  eventTime: string;
   detail: string;
   isPinned: boolean;
 }
@@ -53,6 +60,10 @@ export class DiaryPageComponent implements OnInit {
     typeof this.formService.create<AddDiarySectionRequest>
   >;
 
+  sectionByDayForm!: ReturnType<
+    typeof this.formService.create<AddDiarySectionByDayRequest>
+  >;
+
   constructor(
     private formService: FormBuilderService,
     private diaryService: DiaryService,
@@ -70,7 +81,17 @@ export class DiaryPageComponent implements OnInit {
       b.for('detail', '').add(rules.required, 'Write something ?');
       b.for('isPinned', false);
     });
-    console.log(this.diary);
+
+    const d = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const todayStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    this.sectionByDayForm = this.formService.create<AddDiarySectionByDayRequest>((b) => {
+      b.for('date', todayStr).add(rules.required, 'Date is required');
+      b.for('eventTime', timeStr).add(rules.required, 'Time is required');
+      b.for('detail', '').add(rules.required, 'Write something ?');
+      b.for('isPinned', false);
+    });
 
     if (!this.diary) this.loadDays();
   }
@@ -92,7 +113,7 @@ export class DiaryPageComponent implements OnInit {
             })),
           })),
         };
-        console.log(this.diary);
+        this.sortDaysDesc();
       },
       error: (err) => {
         console.error('Error loading diary:', err);
@@ -109,7 +130,20 @@ export class DiaryPageComponent implements OnInit {
     };
 
     this.diaryService.addSection(body).subscribe({
-      next: () => {
+      next: (vm) => {
+        const sectionDate = new Date(vm.eventTime).toISOString().split('T')[0];
+        const day = this.diary!.days.find((d) => d.date === sectionDate);
+        if (day) {
+          day.sections.unshift({ time: vm.eventTime, content: vm.detail, isPinned: vm.isPinned });
+        } else {
+          this.diary!.days.unshift({
+            date: sectionDate,
+            isExpanded: true,
+            isLoading: false,
+            sections: [{ time: vm.eventTime, content: vm.detail, isPinned: vm.isPinned }],
+          });
+        }
+        this.sortDaysDesc();
         this.sectionForm.reset({
           timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
           detail: '',
@@ -121,6 +155,56 @@ export class DiaryPageComponent implements OnInit {
         console.error('Failed to add section:', err);
       },
     });
+  }
+
+  onSubmitSectionByDay(modal: ModalComponent) {
+    if (this.sectionByDayForm.invalid || !this.diary) return;
+
+    const formVal = this.sectionByDayForm.value as AddDiarySectionByDayRequest;
+    const body: AddSectionByDayRequest = {
+      diaryId: this.diary.id,
+      date: new Date(formVal.date).toISOString(),
+      eventTime: new Date(`${formVal.date}T${formVal.eventTime}`).toISOString(),
+      detail: formVal.detail,
+      isPinned: formVal.isPinned,
+    };
+
+    this.diaryService.addSectionByDay(body).subscribe({
+      next: (vm) => {
+        const sectionDate = new Date(vm.eventTime).toISOString().split('T')[0];
+        const day = this.diary!.days.find((d) => d.date === sectionDate);
+        if (day) {
+          day.sections.unshift({ time: vm.eventTime, content: vm.detail, isPinned: vm.isPinned });
+        } else {
+          this.diary!.days.unshift({
+            date: sectionDate,
+            isExpanded: true,
+            isLoading: false,
+            sections: [{ time: vm.eventTime, content: vm.detail, isPinned: vm.isPinned }],
+          });
+        }
+        this.sortDaysDesc();
+        const r = new Date();
+        const rp = (n: number) => n.toString().padStart(2, '0');
+        this.sectionByDayForm.reset({
+          date: `${r.getFullYear()}-${rp(r.getMonth() + 1)}-${rp(r.getDate())}`,
+          eventTime: `${rp(r.getHours())}:${rp(r.getMinutes())}`,
+          detail: '',
+          isPinned: false,
+        });
+        modal.close();
+      },
+      error: (err) => {
+        console.error('Failed to add section by day:', err);
+      },
+    });
+  }
+
+  private sortDaysDesc() {
+    this.diary!.days.sort((a, b) => b.date.localeCompare(a.date));
+    this.diary!.days.forEach((day) =>
+      day.sections.sort((a, b) => b.time.localeCompare(a.time)),
+    );
   }
 
   toggleDay(day: DiaryDay) {

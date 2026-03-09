@@ -3,10 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import {
+  AddSectionByDayRequest,
   AddSectionRequest,
   CreateDiaryRequest,
   Diary,
   DiaryViewModel,
+  DiarySectionViewModel,
   GetDiariesParams,
   GetDiariesResponse,
 } from '@src/app/models/diary.models';
@@ -42,7 +44,11 @@ export class DiaryService {
     return this.http.get<DiaryViewModel>(`${this.baseUrl}/${id}`);
   }
 
-  addSection(body: AddSectionRequest): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/section`, body);
+  addSection(body: AddSectionRequest): Observable<DiarySectionViewModel> {
+    return this.http.post<DiarySectionViewModel>(`${this.baseUrl}/section`, body);
+  }
+
+  addSectionByDay(body: AddSectionByDayRequest): Observable<DiarySectionViewModel> {
+    return this.http.post<DiarySectionViewModel>(`${this.baseUrl}/section/day`, body);
   }
 }

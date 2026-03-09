@@ -51,6 +51,14 @@ export interface AddSectionRequest {
   isPinned: boolean;
 }
 
+export interface AddSectionByDayRequest {
+  diaryId: string;
+  date: string;
+  detail: string;
+  isPinned: boolean;
+  eventTime: string;
+}
+
 export interface CreateDiaryRequest {
   name: string;
   description?: string;

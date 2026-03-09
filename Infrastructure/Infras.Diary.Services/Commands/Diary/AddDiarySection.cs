@@ -45,7 +45,7 @@ namespace Infras.Diary.Services.Commands.Diary
             }
 
             producer.Produce(DiaryTopics.SyncDailyDiary, new Message<string, SyncMessage> { Key = streamKey, Value = new SyncMessage(streamKey) });
-            return new DiarySectionViewModel(sectionId, request.DiaryId, request.Detail, request.IsPinned, eventTime, DateTimeOffset.UtcNow);
+            return new DiarySectionViewModel(sectionId, Guid.Empty, request.Detail, request.IsPinned, eventTime, DateTimeOffset.UtcNow);
         }
     }
 }

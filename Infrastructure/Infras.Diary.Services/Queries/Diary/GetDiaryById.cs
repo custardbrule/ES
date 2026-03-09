@@ -38,7 +38,7 @@ namespace Infras.Diary.Services.Queries.Diary
             if (!diaryRes.IsValidResponse || !days.IsValidResponse) throw new ApplicationException();
             if (!diaryRes.Found) throw new KeyNotFoundException();
 
-            return diaryRes.Source! with { DailyDiaries = [.. days.Documents] };
+            return diaryRes.Source! with { DailyDiaries = [.. days.Documents.OrderByDescending(d => d.Date)] };
         }
     }
 }
