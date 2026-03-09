@@ -29,11 +29,11 @@ export const ROUTE_DEF: {
 } = {
   home: {
     base: '',
-    toRoute: (params, query) => buildQueryString(query),
+    toRoute: (params, query) => `/${buildQueryString(query)}`,
   },
   collection: {
     base: 'collection/:id',
-    toRoute: (params, query) => 
-      `collection/${params.id}${buildQueryString(query)}`,
+    toRoute: (params, query) =>
+      `/collection/${params.id}${buildQueryString(query)}`,
   },
 } as const;

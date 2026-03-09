@@ -59,7 +59,7 @@ namespace User.Api
                     ClientType = ClientTypes.Public,
                     DisplayName = "Diary Client Application",
                     RedirectUris = { new Uri("https://localhost:7001/signin-oidc"), new Uri("http://localhost:4200/callback") },
-                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("https://localhost:4200/signout-callback-oidc") },
+                    PostLogoutRedirectUris = { new Uri("https://localhost:7001/signout-callback-oidc"), new Uri("http://localhost:4200/signout-callback-oidc") },
                     Permissions =
                     {
                         Permissions.Endpoints.Authorization,
