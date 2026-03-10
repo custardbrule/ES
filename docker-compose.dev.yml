@@ -201,7 +201,6 @@ services:
       - Elasticsearch__ConnectionString=http://elasticsearch:9200
       - Elasticsearch__Username=${ELASTIC_USERNAME}
       - Elasticsearch__Password=${ELASTIC_PASSWORD}
-      - KurrentDB=esdb://eventstoredb:${EVENTSTOREDB_PORT}?tls=false
       - KafkaSettings__ConsumerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
       - KafkaSettings__ConsumerSettings__GroupId=extract-worker
       - KafkaSettings__ConsumerSettings__AutoOffsetReset=Earliest
@@ -211,8 +210,6 @@ services:
       elasticsearch:
         condition: service_healthy
       kafka:
-        condition: service_healthy
-      eventstoredb:
         condition: service_healthy
     networks:
       - es-dev-network

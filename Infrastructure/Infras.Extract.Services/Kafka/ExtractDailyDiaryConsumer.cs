@@ -4,7 +4,6 @@ using Data;
 using Domain.Diary.DiaryRoot;
 using Domain.Extract;
 using Infras.Extract.Services.Ollama;
-using KurrentDB.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -13,21 +12,21 @@ namespace Infras.Extract.Services.Kafka;
 [RegisterKafkaConsumer]
 public class ExtractDailyDiaryConsumer(
     IOptions<ConsumerConfig> config,
-    KurrentDBClient kurrentDBClient,
-    OllamaClient ollama,
     IElasticSearchContext es,
+    OllamaClient ollama,
     ILogger<ExtractDailyDiaryConsumer> logger)
-    : KafkaConsumerBase<string, SyncMessage>(config, logger)
+    : KafkaConsumerBase<string, ExtractDailyDiaryMessage>(config, logger)
 {
-    protected override string Topic => DiaryTopics.SyncDailyDiary;
+    protected override string Topic => DiaryTopics.ExtractDailyDiary;
 
-    protected override async Task HandleAsync(string key, SyncMessage value, Headers _, CancellationToken ct)
+    protected override async Task HandleAsync(string key, ExtractDailyDiaryMessage value, Headers _, CancellationToken ct)
     {
-        var daily = await kurrentDBClient
-            .ReadStreamAsync(Direction.Forwards, value.StreamKey, StreamPosition.Start, cancellationToken: ct)
-            .AggregateAsync(DailyDiary.Init(), (acc, e) =>
-                acc.Apply(e.OriginalEvent.Data.ToArray().GetDataFromBytes(e.OriginalEvent.EventType)!), ct);
+        var response = await es.Client.GetAsync<DailyDiary>(
+            DailyDiaryConstants.ESIndex, DailyDiaryConstants.GetId(value.DayId), ct);
 
+        if (!response.IsValidResponse || !response.Found) return;
+
+        var daily = response.Source!;
         if (daily.Sections.Count == 0) return;
 
         var texts = daily.Sections.Select(s => s.Detail).ToList();
@@ -51,9 +50,9 @@ public class ExtractDailyDiaryConsumer(
         }
 
         await es.BulkUpsertAsync(ExtractConstants.ESIndex, docs, doc => idMap[doc.Id]);
-        logger.LogInformation("Extracted {ChunkCount} chunks from stream {StreamKey}", docs.Count, value.StreamKey);
+        logger.LogInformation("Extracted {ChunkCount} chunks from day {DayId}", docs.Count, value.DayId);
     }
 
-    protected override Task OnMessageFailedAsync(string key, SyncMessage value, Exception ex, int retryCount, CancellationToken ct)
+    protected override Task OnMessageFailedAsync(string key, ExtractDailyDiaryMessage value, Exception ex, int retryCount, CancellationToken ct)
         => SendToDlqAsync(key, value, ex, retryCount, ct);
 }

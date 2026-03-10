@@ -11,7 +11,6 @@ public static class Config
 {
     public static IServiceCollection ConfigExtractInfras(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddEventStore();
         services.AddElasticsearchCore(configuration);
         services.AddOptions<GenericDlqOptions>();
         services.RegisterKafkaServices(configuration, typeof(ExtractDailyDiaryConsumer).Assembly);
