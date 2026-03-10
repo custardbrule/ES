@@ -1,3 +1,12 @@
+using Confluent.Kafka;
+using Contracts.Kafka;
+using Data;
+using Domain.Diary.DiaryRoot;
+using Domain.Extract;
+using Infras.Extract.Services.Ollama;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 namespace Infras.Extract.Services.Kafka;
 
 [RegisterKafkaConsumer]

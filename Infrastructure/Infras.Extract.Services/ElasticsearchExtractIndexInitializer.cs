@@ -1,3 +1,10 @@
+using Data;
+using Domain.Extract;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Mapping;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
 namespace Infras.Extract.Services;
 
 internal sealed class ElasticsearchExtractIndexInitializer(
