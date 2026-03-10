@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -8,11 +8,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\..\Domain\Domain.Extract\Domain.Extract.csproj" />
     <ProjectReference Include="..\..\Domain\Domain.Diary\Domain.Diary.csproj" />
-    <ProjectReference Include="..\..\Shared\CQRS\CQRS.csproj" />
-    <ProjectReference Include="..\..\Shared\Utilities\Utilities.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
-    <ProjectReference Include="..\..\Shared\RequestValidatior\RequestValidatior.csproj" />
   </ItemGroup>
 
 </Project>

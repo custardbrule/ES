@@ -1,4 +1,5 @@
 using Confluent.Kafka;
+using Contracts.Kafka;
 using Data;
 using Domain.Diary.DiaryRoot;
 using KurrentDB.Client;

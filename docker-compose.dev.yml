@@ -180,6 +180,44 @@ services:
       - es-dev-network
     restart: unless-stopped
 
+  # Ollama (self-hosted LLM for AI extraction)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: es-dev-ollama
+    ports:
+      - "${OLLAMA_PORT}:11434"
+    volumes:
+      - ollama-dev-data:/root/.ollama
+    networks:
+      - es-dev-network
+
+  # Extract Worker (AI extraction pipeline)
+  extract-worker:
+    build:
+      context: .
+      dockerfile: API/Extract.Worker/Dockerfile
+    container_name: es-dev-extract-worker
+    environment:
+      - Elasticsearch__ConnectionString=http://elasticsearch:9200
+      - Elasticsearch__Username=${ELASTIC_USERNAME}
+      - Elasticsearch__Password=${ELASTIC_PASSWORD}
+      - KurrentDB=esdb://eventstoredb:${EVENTSTOREDB_PORT}?tls=false
+      - KafkaSettings__ConsumerSettings__BootstrapServers=kafka:${KAFKA_INTERNAL_PORT}
+      - KafkaSettings__ConsumerSettings__GroupId=extract-worker
+      - KafkaSettings__ConsumerSettings__AutoOffsetReset=Earliest
+      - KafkaSettings__ConsumerSettings__EnableAutoCommit=false
+      - Ollama__BaseUrl=http://ollama:11434
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eventstoredb:
+        condition: service_healthy
+    networks:
+      - es-dev-network
+    restart: unless-stopped
+
   # Diary API
   diary-api:
     build:
@@ -225,3 +263,4 @@ volumes:
   mssql-dev-data:
   elasticsearch-dev-data:
   eventstoredb-dev-data:
+  ollama-dev-data:

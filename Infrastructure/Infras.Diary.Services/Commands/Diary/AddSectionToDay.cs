@@ -1,7 +1,7 @@
 using Confluent.Kafka;
 using CQRS;
 using Domain.Diary.DiaryRoot;
-using Infras.Diary.Services.Kafka;
+using Contracts.Kafka;
 using Infras.Diary.Services.Queries;
 using KurrentDB.Client;
 using RequestValidatior;
