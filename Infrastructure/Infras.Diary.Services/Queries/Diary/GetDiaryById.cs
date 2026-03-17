@@ -23,7 +23,7 @@ namespace Infras.Diary.Services.Queries.Diary
                 .Size(1000)
                 .Query(q => q
                     .Bool(b => b
-                        .Must(m => m.Term(t => t.Field(f => f.DiaryId).Value(DiaryConstants.GetId(request.Id))))
+                        .Filter(f => f.Term(t => t.Field(f => f.DiaryId).Value(DiaryConstants.GetId(request.Id))))
                     )
                 )
                 .TrackTotalHits(false),

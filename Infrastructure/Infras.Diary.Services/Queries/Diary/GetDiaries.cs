@@ -24,12 +24,9 @@ namespace Infras.Diary.Services.Queries.Diary
             if (!string.IsNullOrWhiteSpace(AuthorName))
                 queries.Add(new MatchQuery { Field = new Field(nameof(Domain.Diary.DiaryRoot.Diary.AuthorName)), Query = AuthorName });
 
-            return queries.Count switch
-            {
-                0 => new MatchAllQuery(),
-                1 => queries[0], // no performance loss compare to default _, just more readable and no wrapper
-                _ => new BoolQuery { Must = queries }
-            };
+            return queries.Count == 0
+                ? new MatchAllQuery()
+                : new BoolQuery { Filter = queries };
         }
 
         public override SortOptions[] GetSort() => [
