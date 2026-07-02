@@ -1,5 +1,5 @@
 DEV_ENV_FILE := configs/dev/.env
-DEV_COMPOSE  := docker-compose -f docker-compose.dev.yml --env-file $(DEV_ENV_FILE)
+DEV_COMPOSE  := docker-compose -f docker-compose.yml --env-file $(DEV_ENV_FILE)
 
 .PHONY: dev-up dev-down dev-down-v dev-restart dev-logs dev-ps dev-build
 
